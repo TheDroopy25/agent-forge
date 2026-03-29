@@ -1,9 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Slider } from '@/components/ui/slider';
 import { useAgentStore } from '@/store/agentStore';
+import { initiateOAuth, consumeOAuthRedirect, OAUTH_CONFIGS, type OAuthProvider } from '@/lib/oauth';
+
+type AuthMode = 'apikey' | 'oauth';
 
 interface Provider {
   id: string;
@@ -13,6 +16,8 @@ interface Provider {
   freeNote?: string;
   apiKeyUrl?: string;
   apiKeySteps?: string[];
+  supportsOAuth?: boolean;
+  oauthProvider?: OAuthProvider;
 }
 
 const PROVIDERS: Provider[] = [
@@ -45,13 +50,15 @@ const PROVIDERS: Provider[] = [
     name: 'Google Gemini',
     icon: '🔵',
     description: 'Gemini model family',
-    freeNote: '✅ Free tier available — 60 req/min on Flash',
+    freeNote: '✅ Free — 1,500 req/day on Gemini 2.0 Flash',
     apiKeyUrl: 'https://aistudio.google.com/app/apikey',
     apiKeySteps: [
       'Go to aistudio.google.com → Sign in with Google',
       'Click "Get API Key" → Create API key',
       'Paste it here — free tier works immediately',
     ],
+    supportsOAuth: true,
+    oauthProvider: 'google',
   },
   {
     id: 'mistral',
@@ -133,7 +140,19 @@ export default function LLMDrawer({ open, onClose }: Props) {
   const llm = useAgentStore((s) => s.llm);
   const setLLM = useAgentStore((s) => s.setLLM);
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
+  const [oauthTokens, setOAuthTokens] = useState<Record<string, string>>({});
+  const [authModes, setAuthModes] = useState<Record<string, AuthMode>>({});
+  const [oauthClientIds, setOAuthClientIds] = useState<Record<string, string>>({});
   const [setupOpen, setSetupOpen] = useState<string | null>(null);
+
+  // Consume OAuth redirect on mount (user came back from provider)
+  useEffect(() => {
+    const result = consumeOAuthRedirect();
+    if (result) {
+      setOAuthTokens((prev) => ({ ...prev, [result.provider]: result.token }));
+      setSetupOpen(result.provider);
+    }
+  }, []);
 
   const currentModels = MODELS[llm.provider] ?? [];
   const selectedProviderInfo = PROVIDERS.find((p) => p.id === llm.provider);
@@ -213,35 +232,138 @@ export default function LLMDrawer({ open, onClose }: Props) {
           </div>
         </div>
 
-        {/* API Key Setup — shows when a provider is selected */}
+        {/* Auth Setup Panel — shows when a provider is selected */}
         {selectedProviderInfo && setupOpen === llm.provider && (
           <div className="rounded-lg border border-[#1e2d3d] bg-[#0e0e1a] p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-white">
-                {selectedProviderInfo.name} Setup
-              </p>
-              <button
-                onClick={() => setSetupOpen(null)}
-                className="text-xs text-gray-500 hover:text-gray-300"
-              >
+              <p className="text-sm font-semibold text-white">{selectedProviderInfo.name} Setup</p>
+              <button onClick={() => setSetupOpen(null)} className="text-xs text-gray-500 hover:text-gray-300">
                 dismiss
               </button>
             </div>
+
             {selectedProviderInfo.freeNote && (
               <p className="text-xs text-[#76b900]">{selectedProviderInfo.freeNote}</p>
             )}
-            {selectedProviderInfo.apiKeySteps && (
-              <ol className="space-y-1">
-                {selectedProviderInfo.apiKeySteps.map((step, i) => (
-                  <li key={i} className="text-xs text-gray-400 flex gap-2">
-                    <span className="text-[#76b900] font-bold shrink-0">{i + 1}.</span>
-                    {step}
-                  </li>
+
+            {/* Auth mode toggle — only show for providers that support OAuth */}
+            {selectedProviderInfo.supportsOAuth && selectedProviderInfo.id !== 'ollama' && (
+              <div className="flex rounded-lg overflow-hidden border border-[#1e2d3d] text-xs font-medium">
+                {(['oauth', 'apikey'] as AuthMode[]).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setAuthModes((prev) => ({ ...prev, [selectedProviderInfo.id]: mode }))}
+                    className={`flex-1 py-2 transition-colors ${
+                      (authModes[selectedProviderInfo.id] ?? 'oauth') === mode
+                        ? 'bg-[#76b900] text-black font-semibold'
+                        : 'bg-[#1a1a2e] text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    {mode === 'oauth' ? '🔐 Connect with Google' : '🔑 API Key'}
+                  </button>
                 ))}
-              </ol>
+              </div>
             )}
-            {selectedProviderInfo.id !== 'ollama' && (
-              <div className="space-y-2 pt-1">
+
+            {/* OAUTH mode */}
+            {selectedProviderInfo.supportsOAuth &&
+              (authModes[selectedProviderInfo.id] ?? 'oauth') === 'oauth' && (
+              <div className="space-y-3">
+                {oauthTokens[selectedProviderInfo.oauthProvider!] ? (
+                  // Already connected
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-[#76b900]/10 border border-[#76b900]/30">
+                    <span className="text-lg">✅</span>
+                    <div>
+                      <p className="text-sm font-medium text-[#76b900]">Connected to Google</p>
+                      <p className="text-xs text-gray-400">OAuth token stored — your agent will use it automatically</p>
+                    </div>
+                    <button
+                      onClick={() => setOAuthTokens((prev) => ({ ...prev, [selectedProviderInfo.oauthProvider!]: '' }))}
+                      className="ml-auto text-xs text-gray-500 hover:text-red-400"
+                    >
+                      disconnect
+                    </button>
+                  </div>
+                ) : (
+                  // Not yet connected
+                  <div className="space-y-3">
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Sign in with Google to authorize Gemini access. No API key needed — one click and you&apos;re done.
+                    </p>
+
+                    {/* Option A: Use app's shared client ID (if env var is set on Vercel) */}
+                    <button
+                      onClick={async () => {
+                        const sharedClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+                        const clientId = sharedClientId || oauthClientIds['google'];
+                        if (!clientId) {
+                          // Show the manual setup section instead
+                          setAuthModes((prev) => ({ ...prev, [selectedProviderInfo.id]: 'oauth_manual' as AuthMode }));
+                          return;
+                        }
+                        const redirectUri = `${window.location.origin}/api/auth/callback`;
+                        await initiateOAuth('google', clientId, redirectUri);
+                      }}
+                      className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg bg-white text-gray-800 font-medium text-sm hover:bg-gray-100 transition-colors"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                      </svg>
+                      Sign in with Google
+                    </button>
+
+                    {/* If no shared client ID is configured, show manual client ID input */}
+                    {!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+                      <details className="group">
+                        <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-300 list-none flex items-center gap-1">
+                          <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
+                          Using your own Google Cloud project?
+                        </summary>
+                        <div className="mt-2 space-y-2">
+                          <ol className="space-y-1">
+                            {OAUTH_CONFIGS.google.setupSteps.map((step, i) => (
+                              <li key={i} className="text-xs text-gray-400 flex gap-2">
+                                <span className="text-[#76b900] font-bold shrink-0">{i + 1}.</span>
+                                {step}
+                              </li>
+                            ))}
+                          </ol>
+                          <input
+                            type="text"
+                            placeholder="Paste your Google Client ID"
+                            value={oauthClientIds['google'] ?? ''}
+                            onChange={(e) => setOAuthClientIds((prev) => ({ ...prev, google: e.target.value }))}
+                            className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900]"
+                          />
+                          <a href={OAUTH_CONFIGS.google.setupUrl} target="_blank" rel="noreferrer"
+                            className="text-xs text-[#00d4ff] hover:underline block">
+                            → Open Google Cloud Console
+                          </a>
+                        </div>
+                      </details>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* API KEY mode (or for providers that don't support OAuth) */}
+            {selectedProviderInfo.id !== 'ollama' &&
+              (!selectedProviderInfo.supportsOAuth || (authModes[selectedProviderInfo.id] ?? 'oauth') === 'apikey') && (
+              <div className="space-y-2">
+                {selectedProviderInfo.apiKeySteps && (
+                  <ol className="space-y-1">
+                    {selectedProviderInfo.apiKeySteps.map((step, i) => (
+                      <li key={i} className="text-xs text-gray-400 flex gap-2">
+                        <span className="text-[#76b900] font-bold shrink-0">{i + 1}.</span>
+                        {step}
+                      </li>
+                    ))}
+                  </ol>
+                )}
                 <input
                   type="password"
                   placeholder={`Paste your ${selectedProviderInfo.name} API key`}
@@ -249,16 +371,27 @@ export default function LLMDrawer({ open, onClose }: Props) {
                   onChange={(e) => setApiKeys((prev) => ({ ...prev, [selectedProviderInfo.id]: e.target.value }))}
                   className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900] transition-colors"
                 />
+                {apiKeys[selectedProviderInfo.id] && (
+                  <p className="text-xs text-[#76b900]">✓ Key saved</p>
+                )}
                 {selectedProviderInfo.apiKeyUrl && (
-                  <a
-                    href={selectedProviderInfo.apiKeyUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs text-[#00d4ff] hover:underline"
-                  >
+                  <a href={selectedProviderInfo.apiKeyUrl} target="_blank" rel="noreferrer"
+                    className="text-xs text-[#00d4ff] hover:underline">
                     → Get your API key at {selectedProviderInfo.apiKeyUrl.replace('https://', '')}
                   </a>
                 )}
+              </div>
+            )}
+
+            {/* Ollama — no auth needed */}
+            {selectedProviderInfo.id === 'ollama' && (
+              <div className="space-y-1">
+                {selectedProviderInfo.apiKeySteps?.map((step, i) => (
+                  <p key={i} className="text-xs text-gray-400 flex gap-2">
+                    <span className="text-[#76b900] font-bold shrink-0">{i + 1}.</span>
+                    {step}
+                  </p>
+                ))}
               </div>
             )}
           </div>
