@@ -10,6 +10,17 @@ interface Props {
   onClose: () => void;
 }
 
+function Tip({ text }: { text: string }) {
+  return (
+    <div className="group relative">
+      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
+      <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+        <p className="text-xs text-gray-300 leading-relaxed">{text}</p>
+      </div>
+    </div>
+  );
+}
+
 function TagInput({
   tags,
   onAdd,
@@ -102,9 +113,12 @@ export default function GuardrailsDrawer({ open, onClose }: Props) {
 
         {/* Never Do */}
         <div className="space-y-2">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Never do this (add tags)
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              Never do this (add tags)
+            </label>
+            <Tip text="Hard rules the agent will never break regardless of instructions. Written into the system prompt. Zero performance cost. Examples: 'delete files', 'send emails without approval'." />
+          </div>
           <TagInput
             tags={guardrails.neverDo}
             onAdd={addNeverDo}
@@ -118,9 +132,12 @@ export default function GuardrailsDrawer({ open, onClose }: Props) {
 
         {/* Always Ask Before */}
         <div className="space-y-2">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Always ask before (add tags)
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              Always ask before (add tags)
+            </label>
+            <Tip text="Actions the agent must pause and confirm with you before executing. Adds a human-in-the-loop checkpoint. No resource cost — just a confirmation prompt." />
+          </div>
           <TagInput
             tags={guardrails.alwaysAsk}
             onAdd={addAlwaysAsk}
@@ -135,7 +152,10 @@ export default function GuardrailsDrawer({ open, onClose }: Props) {
         {/* Cost Limit */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <label className="text-sm text-gray-300">Cost Limit</label>
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-300">Cost Limit</label>
+              <Tip text="Maximum spend per single request in USD. Agent stops and alerts if a single response would exceed this. Prevents runaway costs from long tool chains. Set to $0 to disable." />
+            </div>
             <span className="text-sm font-medium text-[#76b900]">
               ${guardrails.costLimit.toFixed(2)} / request
             </span>
@@ -155,7 +175,10 @@ export default function GuardrailsDrawer({ open, onClose }: Props) {
         {/* Token Budget */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <label className="text-sm text-gray-300">Token Budget</label>
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-300">Token Budget</label>
+              <Tip text="Maximum tokens the agent can use per conversation turn (input + output combined). Larger budgets allow deeper reasoning and longer responses but cost more. Each 1K tokens ≈ $0.001-0.01 depending on model." />
+            </div>
             <span className="text-sm font-medium text-[#76b900]">
               {formatTokens(guardrails.tokenBudget)} tokens
             </span>
@@ -174,9 +197,12 @@ export default function GuardrailsDrawer({ open, onClose }: Props) {
 
         {/* Hard Stop File */}
         <div className="space-y-2">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Hard Stop File
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              Hard Stop File
+            </label>
+            <Tip text="A file path the agent checks before each action. If this file exists on disk, the agent stops immediately. Emergency brake — create this file to halt a runaway agent. Zero overhead when file doesn't exist." />
+          </div>
           <input
             type="text"
             value={guardrails.hardStopPath}
@@ -190,9 +216,12 @@ export default function GuardrailsDrawer({ open, onClose }: Props) {
 
         {/* Max Tool Calls */}
         <div className="space-y-2">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Max Tool Calls
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              Max Tool Calls
+            </label>
+            <Tip text="Maximum number of tool calls (web search, code execution, file reads, etc.) allowed per turn. Prevents the agent from looping endlessly. Increase for complex multi-step tasks." />
+          </div>
           <div className="flex items-center gap-3">
             <input
               type="number"

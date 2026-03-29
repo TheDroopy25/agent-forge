@@ -7,23 +7,35 @@ import type { AgentState } from '@/store/agentStore';
 
 type ToolKey = keyof Omit<AgentState['tools'], 'customMcpUrl'>;
 
+function Tip({ text }: { text: string }) {
+  return (
+    <div className="group relative">
+      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
+      <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+        <p className="text-xs text-gray-300 leading-relaxed">{text}</p>
+      </div>
+    </div>
+  );
+}
+
 interface ToolDefinition {
   key: ToolKey;
   label: string;
   description: string;
+  tooltip: string;
 }
 
 const TOOLS: ToolDefinition[] = [
-  { key: 'webSearch',      label: 'Web Search',       description: 'Search the internet' },
-  { key: 'codeExecution',  label: 'Code Execution',   description: 'Run Python/JS sandboxed' },
-  { key: 'fileSystem',     label: 'File System',      description: 'Read/write local files' },
-  { key: 'browserControl', label: 'Browser Control',  description: 'Control a browser' },
-  { key: 'terminal',       label: 'Terminal/CLI',     description: 'Execute shell commands' },
-  { key: 'imageAnalysis',  label: 'Image Analysis',   description: 'Analyze images with vision' },
-  { key: 'pdfReader',      label: 'PDF Reader',       description: 'Extract text from PDFs' },
-  { key: 'calendar',       label: 'Calendar',         description: 'Read/write calendar events' },
-  { key: 'email',          label: 'Email',            description: 'Send and read emails' },
-  { key: 'customMcp',      label: 'Custom MCP',       description: 'Custom MCP server' },
+  { key: 'webSearch',      label: 'Web Search',       description: 'Search the internet',          tooltip: 'Agent can search the internet in real-time. Adds 1-3 seconds per search. Costs vary by search API (Brave: $3/1000 searches free tier). Essential for up-to-date information.' },
+  { key: 'codeExecution',  label: 'Code Execution',   description: 'Run Python/JS sandboxed',       tooltip: 'Agent can write and run Python or JavaScript code in a sandbox. Adds 2-10 seconds per execution. Requires a sandboxed runtime. High utility, moderate security risk if not sandboxed properly.' },
+  { key: 'fileSystem',     label: 'File System',      description: 'Read/write local files',        tooltip: 'Agent can read and write files on your machine. No latency cost. High power — be careful with write access on sensitive directories.' },
+  { key: 'browserControl', label: 'Browser Control',  description: 'Control a browser',             tooltip: 'Agent can automate web browsers (Playwright). Very slow — 5-30 seconds per page. High resource use: ~200MB RAM per browser session. Use only when no API exists.' },
+  { key: 'terminal',       label: 'Terminal/CLI',     description: 'Execute shell commands',        tooltip: 'Agent can run shell commands. Instant execution. Highest risk tool — only enable if you trust the agent and have guardrails set. No API cost.' },
+  { key: 'imageAnalysis',  label: 'Image Analysis',   description: 'Analyze images with vision',    tooltip: 'Agent can describe and analyze images using a vision model. Adds ~1 second per image. Costs ~2-5x a text request depending on model. Required for any visual task.' },
+  { key: 'pdfReader',      label: 'PDF Reader',       description: 'Extract text from PDFs',        tooltip: 'Agent can extract and read text from PDF files. Fast (1-2 seconds). Free — processed locally. Essential for document workflows.' },
+  { key: 'calendar',       label: 'Calendar',         description: 'Read/write calendar events',    tooltip: 'Agent can read and create calendar events. Requires Google/Outlook OAuth. Near-instant for reads. Enable only if you want the agent managing your schedule.' },
+  { key: 'email',          label: 'Email',            description: 'Send and read emails',          tooltip: 'Agent can send and read emails. Requires OAuth or SMTP credentials. Sending is instant; reading inbox adds ~0.5 seconds. High impact capability — use guardrails.' },
+  { key: 'customMcp',      label: 'Custom MCP',       description: 'Custom MCP server',             tooltip: 'Connect any MCP (Model Context Protocol) server to add custom tools. Performance depends entirely on the MCP server. Supports any tool that follows the open MCP standard.' },
 ];
 
 interface Props {
@@ -46,7 +58,7 @@ export default function ToolsDrawer({ open, onClose }: Props) {
         </SheetHeader>
 
         <div className="grid grid-cols-2 gap-3">
-          {TOOLS.map(({ key, label, description }) => (
+          {TOOLS.map(({ key, label, description, tooltip }) => (
             <div
               key={key}
               className={`border rounded-lg p-3 transition-all ${
@@ -57,7 +69,10 @@ export default function ToolsDrawer({ open, onClose }: Props) {
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-white leading-tight">{label}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-medium text-white leading-tight">{label}</p>
+                    <Tip text={tooltip} />
+                  </div>
                   <p className="text-xs text-gray-500 mt-0.5 leading-tight">{description}</p>
                 </div>
                 <Switch

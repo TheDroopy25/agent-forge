@@ -14,6 +14,17 @@ const HEARTBEAT_OPTIONS = [
   { value: '4hours',      label: 'Every 4 hours' },
 ];
 
+function Tip({ text }: { text: string }) {
+  return (
+    <div className="group relative">
+      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
+      <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+        <p className="text-xs text-gray-300 leading-relaxed">{text}</p>
+      </div>
+    </div>
+  );
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -35,9 +46,12 @@ export default function ObservabilityDrawer({ open, onClose }: Props) {
 
         {/* Log Level */}
         <div className="space-y-2">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Log Level
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              Log Level
+            </label>
+            <Tip text="Controls how much detail the agent writes to logs. Silent = no logs. Normal = key events only. Verbose = all decisions and tool calls. Debug = everything including internal state. More logging = slightly higher disk/CPU overhead." />
+          </div>
           <div className="flex rounded-md overflow-hidden border border-[#1e2d3d]">
             {LOG_LEVELS.map((level) => {
               const value = level.toLowerCase();
@@ -63,9 +77,12 @@ export default function ObservabilityDrawer({ open, onClose }: Props) {
 
         {/* Heartbeat Interval */}
         <div className="space-y-2">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Heartbeat Interval
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              Heartbeat Interval
+            </label>
+            <Tip text="How often the agent sends a 'still alive' ping to monitoring systems. Disabled = no pings. Shorter interval = faster failure detection. Resource: negligible — just a small log write." />
+          </div>
           <select
             value={observability.heartbeatInterval}
             onChange={(e) => setObservability({ heartbeatInterval: e.target.value })}
@@ -81,9 +98,12 @@ export default function ObservabilityDrawer({ open, onClose }: Props) {
 
         {/* Trace Output Path */}
         <div className="space-y-2">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Trace Output Path
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              Trace Output Path
+            </label>
+            <Tip text="Directory where the agent writes structured trace files (JSON). Useful for debugging and replay. Zero performance impact. Each trace file is ~10-100KB depending on task complexity." />
+          </div>
           <input
             type="text"
             value={observability.traceOutputPath}
@@ -97,9 +117,12 @@ export default function ObservabilityDrawer({ open, onClose }: Props) {
 
         {/* Discord Alert Channel */}
         <div className="space-y-2">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Discord Alert Channel
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              Discord Alert Channel
+            </label>
+            <Tip text="Send alerts to this Discord channel when the agent errors, hits limits, or completes major tasks. Requires Discord channel ID and the Discord skill enabled. Zero overhead when idle." />
+          </div>
           <input
             type="text"
             value={observability.discordAlertChannel}
@@ -114,7 +137,10 @@ export default function ObservabilityDrawer({ open, onClose }: Props) {
         {/* Daily Summary */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-white">Daily Summary</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-white">Daily Summary</p>
+              <Tip text="Agent sends a daily digest of what it did, how many requests it made, and approximate cost. Sent to your primary channel. Resource: one extra LLM call per day to generate the summary." />
+            </div>
             <p className="text-xs text-gray-500 mt-0.5">Send daily activity summary</p>
           </div>
           <Switch
@@ -128,7 +154,10 @@ export default function ObservabilityDrawer({ open, onClose }: Props) {
         {/* Context Compression */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
-            <p className="text-sm font-medium text-white">Context Compression</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-white">Context Compression</p>
+              <Tip text="When the conversation approaches token limits, the agent automatically summarizes older messages to free up space. Keeps long conversations running without hitting model limits. Adds ~200ms and ~1000 tokens when triggered." />
+            </div>
             <p className="text-xs text-gray-500 mt-0.5">
               Compress context when approaching limits
             </p>

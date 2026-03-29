@@ -6,19 +6,34 @@ import { useAgentStore } from '@/store/agentStore';
 
 const AVATARS = ['🤖', '🧠', '⚡', '🔮', '🦾', '🌟', '🚀', '🎯', '💎', '🔥', '🌊', '🦁', '🐉', '🎭', '🌈', '⚙️', '🛸', '🎪', '🔬', '🏆'];
 
+function Tip({ text }: { text: string }) {
+  return (
+    <div className="group relative">
+      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
+      <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+        <p className="text-xs text-gray-300 leading-relaxed">{text}</p>
+      </div>
+    </div>
+  );
+}
+
 interface SliderRowProps {
   label: string;
   leftLabel: string;
   rightLabel: string;
   value: number;
   onChange: (value: number) => void;
+  tooltip?: string;
 }
 
-function SliderRow({ label, leftLabel, rightLabel, value, onChange }: SliderRowProps) {
+function SliderRow({ label, leftLabel, rightLabel, value, onChange, tooltip }: SliderRowProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-white">{label}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-white">{label}</span>
+          {tooltip && <Tip text={tooltip} />}
+        </div>
         <span className="text-sm text-[#76b900] font-mono">{value}%</span>
       </div>
       <Slider
@@ -58,7 +73,10 @@ export default function IdentityDrawer({ open, onClose }: Props) {
 
         {/* Agent Name */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Agent Name</label>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-300">Agent Name</label>
+            <Tip text="The name your agent introduces itself as. Used in SOUL.md and all generated configs. No performance impact." />
+          </div>
           <input
             type="text"
             value={identity.name}
@@ -70,7 +88,10 @@ export default function IdentityDrawer({ open, onClose }: Props) {
 
         {/* Avatar Picker */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Avatar</label>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-300">Avatar</label>
+            <Tip text="Visual icon for your agent in dashboards and logs. Cosmetic only — no impact." />
+          </div>
           <div className="grid grid-cols-10 gap-2">
             {AVATARS.map((emoji) => (
               <button
@@ -90,7 +111,10 @@ export default function IdentityDrawer({ open, onClose }: Props) {
 
         {/* Purpose */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Purpose</label>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-300">Purpose</label>
+            <Tip text="One sentence describing what this agent does. Feeds into the system prompt. Clearer = better behavior. No resource cost." />
+          </div>
           <textarea
             rows={4}
             maxLength={160}
@@ -114,6 +138,7 @@ export default function IdentityDrawer({ open, onClose }: Props) {
               rightLabel="Verbose"
               value={identity.verbosity}
               onChange={(v) => setIdentity({ verbosity: v })}
+              tooltip="How much your agent writes. Terse agents respond faster and use fewer tokens (cheaper). Verbose agents give richer answers but cost more per response. Recommended: 40-60 for general use."
             />
             <SliderRow
               label="Tone"
@@ -121,6 +146,7 @@ export default function IdentityDrawer({ open, onClose }: Props) {
               rightLabel="Casual"
               value={identity.tone}
               onChange={(v) => setIdentity({ tone: v })}
+              tooltip="Formal agents use professional language suitable for business tools. Casual agents feel more conversational. No performance impact — affects system prompt wording only."
             />
             <SliderRow
               label="Humor"
@@ -128,6 +154,7 @@ export default function IdentityDrawer({ open, onClose }: Props) {
               rightLabel="Witty"
               value={identity.humor}
               onChange={(v) => setIdentity({ humor: v })}
+              tooltip="How often the agent uses wit or lightness. Higher values make interactions more engaging but can reduce precision in technical tasks. Keep low for data/coding work."
             />
             <SliderRow
               label="Assertiveness"
@@ -135,6 +162,7 @@ export default function IdentityDrawer({ open, onClose }: Props) {
               rightLabel="Opinionated"
               value={identity.assertiveness}
               onChange={(v) => setIdentity({ assertiveness: v })}
+              tooltip="Passive agents hedge and ask for confirmation. Opinionated agents make decisions and state preferences. High assertiveness reduces back-and-forth but may overstep on sensitive tasks."
             />
           </div>
         </div>

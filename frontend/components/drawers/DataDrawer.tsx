@@ -7,6 +7,17 @@ import { useAgentStore } from '@/store/agentStore';
 const inputClass =
   'flex-1 bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#76b900] transition-colors';
 
+function Tip({ text }: { text: string }) {
+  return (
+    <div className="group relative">
+      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
+      <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+        <p className="text-xs text-gray-300 leading-relaxed">{text}</p>
+      </div>
+    </div>
+  );
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -74,7 +85,10 @@ export default function DataDrawer({ open, onClose }: Props) {
 
         {/* File Dropzone */}
         <div className="space-y-3">
-          <label className="text-sm font-medium text-gray-300">Files</label>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-300">Files</label>
+            <Tip text="Attach documents the agent should know about. Files are chunked and embedded into a vector store (requires Long-term Memory enabled). Processing: 1-10 seconds per file. One-time cost to embed; fast retrieval after." />
+          </div>
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleFileDrop}
@@ -114,7 +128,10 @@ export default function DataDrawer({ open, onClose }: Props) {
 
         {/* URL Indexer */}
         <div className="space-y-3">
-          <label className="text-sm font-medium text-gray-300">URL Indexer</label>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-300">URL Indexer</label>
+            <Tip text="Agent crawls and indexes web pages as reference material. Requires web crawling tool. Processing: 5-30 seconds per URL. Adds context without manual copy-paste." />
+          </div>
           <div className="flex gap-2">
             <input
               type="url"
@@ -153,7 +170,10 @@ export default function DataDrawer({ open, onClose }: Props) {
 
         {/* API Connections */}
         <div className="space-y-3">
-          <label className="text-sm font-medium text-gray-300">API Connections</label>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-300">API Connections</label>
+            <Tip text="Connect live data sources (REST APIs). Agent can fetch fresh data on demand. Latency: depends on the external API. Useful for stock prices, weather, CRM data, etc." />
+          </div>
           <div className="flex gap-2">
             <input
               type="text"
@@ -202,7 +222,10 @@ export default function DataDrawer({ open, onClose }: Props) {
 
         {/* Data Format Toggle */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Data Format</label>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-300">Data Format</label>
+            <Tip text="Controls how the agent interprets your data. Choose Structured for tables and CSVs; Unstructured for documents and freeform text." />
+          </div>
           <div className="flex gap-2">
             <button
               onClick={() => setData({ structured: true })}
@@ -212,7 +235,15 @@ export default function DataDrawer({ open, onClose }: Props) {
                   : 'bg-[#1a1a2e] border-[#1e2d3d] text-gray-300 hover:border-[#76b900]/40'
               }`}
             >
-              Structured
+              <span className="flex items-center justify-center gap-1.5">
+                <span>Structured</span>
+                <div className="group relative" onClick={(e) => e.stopPropagation()}>
+                  <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d]/60 text-gray-400 text-xs cursor-help select-none">?</span>
+                  <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+                    <p className="text-xs text-gray-300 leading-relaxed">Agent treats data as tables, rows, and columns — better for CSV, spreadsheets, databases. More precise queries, less flexible. Best for analytical tasks.</p>
+                  </div>
+                </div>
+              </span>
             </button>
             <button
               onClick={() => setData({ structured: false })}
@@ -222,7 +253,15 @@ export default function DataDrawer({ open, onClose }: Props) {
                   : 'bg-[#1a1a2e] border-[#1e2d3d] text-gray-300 hover:border-[#76b900]/40'
               }`}
             >
-              Unstructured
+              <span className="flex items-center justify-center gap-1.5">
+                <span>Unstructured</span>
+                <div className="group relative" onClick={(e) => e.stopPropagation()}>
+                  <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d]/60 text-gray-400 text-xs cursor-help select-none">?</span>
+                  <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+                    <p className="text-xs text-gray-300 leading-relaxed">Agent treats data as freeform text — better for PDFs, articles, notes. More flexible, less precise. Best for research and writing tasks.</p>
+                  </div>
+                </div>
+              </span>
             </button>
           </div>
         </div>

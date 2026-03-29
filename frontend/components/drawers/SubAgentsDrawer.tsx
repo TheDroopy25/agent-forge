@@ -17,6 +17,28 @@ const MODEL_OPTIONS = [
 const ROUTING_MODES = ['Round-Robin', 'Specialization', 'Priority'];
 const ROLES = ['Coordinator', 'Worker'];
 
+const ROUTING_MODE_TOOLTIPS: Record<string, string> = {
+  'Round-Robin': 'Tasks are distributed evenly across all sub-agents in order. Good for load balancing identical agents. No intelligence in assignment.',
+  'Specialization': 'Tasks are routed to the most relevant sub-agent based on the task description. Requires an extra LLM call to classify the task. Adds ~0.5 seconds and ~500 tokens per routing decision.',
+  'Priority': 'Sub-agents have a ranked order — the highest-priority available agent handles each task. Simple and predictable. Good for fallback scenarios.',
+};
+
+const ROLE_TOOLTIPS: Record<string, string> = {
+  'Coordinator': 'This agent manages and delegates — it breaks tasks into pieces and assigns them to sub-agents. Higher intelligence requirement; uses more tokens for planning.',
+  'Worker': 'This agent executes specific tasks assigned by a coordinator. Simpler, cheaper, faster. Use this if this agent will be a sub-agent of another.',
+};
+
+function Tip({ text }: { text: string }) {
+  return (
+    <div className="group relative">
+      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
+      <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+        <p className="text-xs text-gray-300 leading-relaxed">{text}</p>
+      </div>
+    </div>
+  );
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -61,7 +83,10 @@ export default function SubAgentsDrawer({ open, onClose }: Props) {
 
         {/* Add Sub-Agent Form */}
         <div className="space-y-3">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Add Sub-Agent</p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Add Sub-Agent</p>
+            <Tip text="Sub-agents are specialized workers this agent can delegate tasks to. Each runs independently with its own model and tools. Adding more increases capability but also cost — each sub-agent call is a separate LLM request." />
+          </div>
           <input
             type="text"
             value={name}
@@ -138,7 +163,10 @@ export default function SubAgentsDrawer({ open, onClose }: Props) {
 
           {/* Routing Mode */}
           <div className="space-y-2">
-            <label className="text-sm text-gray-300">Routing Mode</label>
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-300">Routing Mode</label>
+              <Tip text="How tasks are distributed among sub-agents when multiple are available. Each mode has different tradeoffs between simplicity and intelligence." />
+            </div>
             <div className="flex gap-2">
               {ROUTING_MODES.map((mode) => (
                 <button
@@ -150,7 +178,15 @@ export default function SubAgentsDrawer({ open, onClose }: Props) {
                       : 'bg-[#1e2d3d] text-gray-400 hover:bg-[#253d52]'
                   }`}
                 >
-                  {mode}
+                  <span className="flex items-center justify-center gap-1">
+                    <span>{mode}</span>
+                    <div className="group relative" onClick={(e) => e.stopPropagation()}>
+                      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#0e0e1a]/60 text-gray-400 text-xs cursor-help select-none">?</span>
+                      <div className="absolute right-0 top-5 z-50 hidden group-hover:block w-56 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+                        <p className="text-xs text-gray-300 leading-relaxed">{ROUTING_MODE_TOOLTIPS[mode]}</p>
+                      </div>
+                    </div>
+                  </span>
                 </button>
               ))}
             </div>
@@ -159,7 +195,10 @@ export default function SubAgentsDrawer({ open, onClose }: Props) {
           {/* Max Concurrent */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <label className="text-sm text-gray-300">Max Concurrent</label>
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-300">Max Concurrent</label>
+                <Tip text="How many sub-agents can run at the same time. Higher = faster parallel work but higher simultaneous API cost and memory use. Each active sub-agent uses ~50-200MB RAM." />
+              </div>
               <span className="text-sm font-medium text-[#76b900]">{subAgents.maxConcurrent} agents</span>
             </div>
             <Slider
@@ -174,7 +213,10 @@ export default function SubAgentsDrawer({ open, onClose }: Props) {
 
           {/* Role */}
           <div className="space-y-2">
-            <label className="text-sm text-gray-300">Role</label>
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-300">Role</label>
+              <Tip text="Whether this agent coordinates or executes." />
+            </div>
             <div className="flex gap-2">
               {ROLES.map((role) => (
                 <button
@@ -186,7 +228,15 @@ export default function SubAgentsDrawer({ open, onClose }: Props) {
                       : 'bg-[#1e2d3d] text-gray-400 hover:bg-[#253d52]'
                   }`}
                 >
-                  {role}
+                  <span className="flex items-center justify-center gap-1.5">
+                    <span>{role}</span>
+                    <div className="group relative" onClick={(e) => e.stopPropagation()}>
+                      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#0e0e1a]/60 text-gray-400 text-xs cursor-help select-none">?</span>
+                      <div className="absolute right-0 top-5 z-50 hidden group-hover:block w-56 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+                        <p className="text-xs text-gray-300 leading-relaxed">{ROLE_TOOLTIPS[role]}</p>
+                      </div>
+                    </div>
+                  </span>
                 </button>
               ))}
             </div>

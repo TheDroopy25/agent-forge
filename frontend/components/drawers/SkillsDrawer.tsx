@@ -13,6 +13,32 @@ interface SkillDefinition {
   icon: string;
 }
 
+function Tip({ text }: { text: string }) {
+  return (
+    <div className="group relative">
+      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
+      <div className="absolute left-1/2 -translate-x-1/2 top-5 z-50 hidden group-hover:block w-56 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+        <p className="text-xs text-gray-300 leading-relaxed">{text}</p>
+      </div>
+    </div>
+  );
+}
+
+const SKILL_TOOLTIPS: Record<string, string> = {
+  discord: 'Connects to Discord — read/send messages, manage channels, react, create threads. Requires a bot token. Resource: persistent WebSocket connection (~5MB RAM).',
+  github: 'Read issues, PRs, CI status, and commit code. Requires a GitHub token. Great for dev workflow agents. No significant resource impact.',
+  googleWorkspace: 'Access Gmail, Calendar, Drive, Docs, Sheets. Requires Google OAuth. High utility for personal/business assistant agents. API rate limits apply.',
+  weather: 'Fetch current conditions and forecasts via wttr.in or Open-Meteo. Free, no API key needed. Minimal resource use.',
+  summarize: 'Extract and summarize text from URLs, PDFs, and local files. Adds 1-5 seconds per document. Token cost scales with document length.',
+  figma: 'Access Figma design files, export assets, read design tokens. Requires Figma API key. Read-only by default.',
+  clawHub: 'Browse and install agent skill packs from ClawHub.com. Extends what your agent can do without writing code. Minimal overhead.',
+  webScraper: 'Scrape and extract content from any website. Uses Playwright — ~200MB RAM per session, 5-30 seconds per page. Use sparingly.',
+  cronScheduler: 'Schedule recurring tasks (send reports, check inboxes, post content). Runs in background — minimal resource use when idle.',
+  notion: 'Read and write Notion pages, databases, and blocks. Requires Notion integration token. Useful for knowledge base agents.',
+  slack: 'Send and receive Slack messages, manage channels. Requires a Slack app token. ~5MB RAM for WebSocket connection.',
+  airtable: 'Query and update Airtable bases and tables. Requires Airtable API key. Good for structured data workflows.',
+};
+
 const SKILLS: SkillDefinition[] = [
   { key: 'discord',         label: 'Discord',          icon: '💬' },
   { key: 'github',          label: 'GitHub',            icon: '🐙' },
@@ -59,7 +85,10 @@ export default function SkillsDrawer({ open, onClose }: Props) {
               }`}
             >
               <span className="text-2xl">{icon}</span>
-              <p className="text-xs font-medium text-white text-center leading-tight">{label}</p>
+              <div className="flex items-center justify-center gap-1">
+                <p className="text-xs font-medium text-white text-center leading-tight">{label}</p>
+                <Tip text={SKILL_TOOLTIPS[key]} />
+              </div>
               <Switch
                 checked={skills[key]}
                 onCheckedChange={(checked) => setSkills({ [key]: checked })}
