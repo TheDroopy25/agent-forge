@@ -84,6 +84,19 @@ function Tip({ text }: { text: string }) {
   );
 }
 
+// Play audio blob at a custom speed using Web Audio API
+async function playWithSpeed(blob: Blob, speed: number, onEnded: () => void) {
+  const arrayBuffer = await blob.arrayBuffer();
+  const audioCtx = new AudioContext();
+  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+  const source = audioCtx.createBufferSource();
+  source.buffer = audioBuffer;
+  source.playbackRate.value = speed;
+  source.connect(audioCtx.destination);
+  source.onended = () => { onEnded(); audioCtx.close(); };
+  source.start();
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -124,11 +137,7 @@ export default function VoiceDrawer({ open, onClose }: Props) {
         });
         if (!response.ok) throw new Error('bad_key');
         const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audio.onended = () => setPreviewing(false);
-        audio.onerror = () => { setPreviewing(false); setPreviewError('Preview failed — check your API key'); };
-        audio.play();
+        await playWithSpeed(blob, voice.speed, () => setPreviewing(false));
       } else if (voice.provider === 'openai') {
         const response = await fetch('https://api.openai.com/v1/audio/speech', {
           method: 'POST',
@@ -137,11 +146,7 @@ export default function VoiceDrawer({ open, onClose }: Props) {
         });
         if (!response.ok) throw new Error('bad_key');
         const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audio.onended = () => setPreviewing(false);
-        audio.onerror = () => { setPreviewing(false); setPreviewError('Preview failed — check your API key'); };
-        audio.play();
+        await playWithSpeed(blob, voice.speed, () => setPreviewing(false));
       } else {
         setPreviewing(false);
       }
