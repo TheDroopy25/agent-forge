@@ -1,0 +1,104 @@
+name: Build Desktop App
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install frontend deps
+        run: cd frontend && npm install
+      - name: Build Next.js static export
+        run: cd frontend && npm run build
+      - name: Install Electron deps
+        run: cd electron && npm install
+      - name: Build Mac DMG
+        run: cd electron && npx electron-builder --mac --publish never
+      - name: Upload Mac artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AgentForge-mac
+          path: electron/dist/*.dmg
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install frontend deps
+        run: cd frontend && npm install
+      - name: Build Next.js static export
+        run: cd frontend && npm run build
+      - name: Install Electron deps
+        run: cd electron && npm install
+      - name: Build Windows EXE
+        run: cd electron && npx electron-builder --win --publish never
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AgentForge-windows
+          path: electron/dist/*.exe
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install frontend deps
+        run: cd frontend && npm install
+      - name: Build Next.js static export
+        run: cd frontend && npm run build
+      - name: Install Electron deps
+        run: cd electron && npm install
+      - name: Build Linux AppImage
+        run: cd electron && npx electron-builder --linux --publish never
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AgentForge-linux
+          path: electron/dist/*.AppImage
+
+  create-release:
+    needs: [build-mac, build-windows, build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Create draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          prerelease: true
+          name: "AgentForge ${{ github.ref_name }} (Beta)"
+          body: |
+            ## AgentForge Beta Release
+
+            Private beta — not for public distribution.
+
+            ### Downloads
+            | Platform | File |
+            |---|---|
+            | macOS | `AgentForge-*.dmg` |
+            | Windows | `AgentForge-Setup-*.exe` |
+            | Linux | `AgentForge-*.AppImage` |
+
+            ### Install
+            - **Mac:** Open the DMG, drag AgentForge to Applications
+            - **Windows:** Run the .exe installer
+            - **Linux:** `chmod +x AgentForge-*.AppImage && ./AgentForge-*.AppImage`
+          files: artifacts/**/*
