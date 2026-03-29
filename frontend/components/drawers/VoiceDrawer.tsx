@@ -16,13 +16,11 @@ interface VoiceProvider {
 }
 
 const VOICE_PROVIDERS: VoiceProvider[] = [
-  { id: 'elevenlabs', name: 'ElevenLabs', description: 'Most realistic voices — requires a free account', color: '#f59e0b' },
-  { id: 'openai',     name: 'OpenAI TTS', description: 'Clean, natural voices — requires OpenAI account', color: '#10a37f' },
+  { id: 'elevenlabs', name: 'ElevenLabs', description: 'Most realistic voices — free account, no credit card required', color: '#f59e0b', recommend: true },
 ];
 
 const PROVIDER_TOOLTIPS: Record<string, string> = {
-  elevenlabs: 'Highest quality voices — most natural, expressive, and human-sounding. Free tier includes 10,000 characters per month. Best for production voice agents.',
-  openai: '6 built-in voices. Good quality, simple setup. Best if you\'re already using OpenAI for your agent\'s brain — one API key covers both.',
+  elevenlabs: 'Highest quality voices — most natural, expressive, and human-sounding. Free tier includes 10,000 characters per month. No credit card required.',
 };
 
 const VOICES: Record<string, string[]> = {
@@ -36,7 +34,7 @@ const VOICES: Record<string, string[]> = {
     'Jessica - Playful, Warm',
     'George - Warm Storyteller',
   ],
-  openai: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'],
+
 };
 
 const ELEVENLABS_VOICE_IDS: Record<string, string> = {
@@ -138,15 +136,6 @@ export default function VoiceDrawer({ open, onClose }: Props) {
         if (!response.ok) throw new Error('bad_key');
         const blob = await response.blob();
         await playWithSpeed(blob, 1.0, () => setPreviewing(false));
-      } else if (voice.provider === 'openai') {
-        const response = await fetch('https://api.openai.com/v1/audio/speech', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'tts-1', input: text, voice: voice.voiceId, speed: voice.speed }),
-        });
-        if (!response.ok) throw new Error('bad_key');
-        const blob = await response.blob();
-        await playWithSpeed(blob, voice.speed, () => setPreviewing(false));
       } else {
         setPreviewing(false);
       }
@@ -284,35 +273,7 @@ export default function VoiceDrawer({ open, onClose }: Props) {
             </div>
           )}
 
-          {voice.provider === 'openai' && (
-            <div className="space-y-3 rounded-lg border border-[#1e2d3d] bg-[#0d1929] p-4">
-              <p className="text-sm font-medium text-white">OpenAI API Key</p>
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-proj-..."
-                className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900] transition-colors"
-              />
-              <div style={{ background: '#060d18', border: '1px solid #1e2d3d', borderRadius: '8px', padding: '12px' }}>
-                <p style={{ color: '#8b9cb3', fontSize: '12px', marginBottom: '8px', fontWeight: 600 }}>Don&apos;t have one? Here&apos;s how to get it:</p>
-                <ol style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {[
-                    <>Go to <a href="https://platform.openai.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: '#76b900' }}>platform.openai.com/signup</a> and create a free account</>,
-                    <>Once logged in, click your profile icon (top-right) → <strong style={{ color: '#cdd6e0' }}>API keys</strong></>,
-                    <>Or go directly: <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" style={{ color: '#76b900' }}>platform.openai.com/api-keys</a></>,
-                    <>Click <strong style={{ color: '#cdd6e0' }}>Create new secret key</strong> → give it a name → click <strong style={{ color: '#cdd6e0' }}>Create secret key</strong></>,
-                    <>Copy the key immediately — OpenAI only shows it once. Paste it in the box above.</>,
-                    <><strong style={{ color: '#f59e0b' }}>Note:</strong> OpenAI TTS requires a paid account with billing set up. Add a card at <a href="https://platform.openai.com/settings/organization/billing" target="_blank" rel="noopener noreferrer" style={{ color: '#76b900' }}>platform.openai.com/billing</a>. Cost is very low (~$0.015 per 1,000 characters).</>,
-                  ].map((step, i) => (
-                    <li key={i} style={{ color: '#8b9cb3', fontSize: '12px', lineHeight: '1.5' }}>
-                      {step}
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </div>
-          )}
+
 
           {/* Voice Picker */}
           <div className="space-y-2">
@@ -359,36 +320,12 @@ export default function VoiceDrawer({ open, onClose }: Props) {
             );
           })()}
 
-          {/* Speed Slider — OpenAI only (ElevenLabs doesn't support speed adjustment) */}
-          {voice.provider === 'openai' ? (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-300">Speed</label>
-                  <Tip text="0.5x sounds slow and deliberate — good for instructions or accessibility. 1.0x is natural speech. 1.5-2.0x sounds faster — use for quick notifications only." />
-                </div>
-                <span className="text-sm text-[#76b900] font-mono">{voice.speed.toFixed(1)}x</span>
-              </div>
-              <Slider
-                min={0.5}
-                max={2.0}
-                step={0.1}
-                value={[voice.speed]}
-                onValueChange={(val) => setVoice({ speed: Array.isArray(val) ? (val as number[])[0] : (val as number) })}
-                className="w-full"
-              />
-              <div className="flex justify-between">
-                <span className="text-xs text-gray-500">0.5x (Slow)</span>
-                <span className="text-xs text-gray-500">2.0x (Fast)</span>
-              </div>
-            </div>
-          ) : (
-            <div style={{ background: '#0d1929', border: '1px solid #1e2d3d', borderRadius: '8px', padding: '10px 14px' }}>
-              <p className="text-xs text-gray-500">
-                💡 ElevenLabs doesn&apos;t support speed adjustment. Speaking pace is controlled by the voice and style you choose above.
-              </p>
-            </div>
-          )}
+          {/* Speed note */}
+          <div style={{ background: '#0d1929', border: '1px solid #1e2d3d', borderRadius: '8px', padding: '10px 14px' }}>
+            <p className="text-xs text-gray-500">
+              💡 Speaking pace is controlled by the voice and style you choose above — not a separate speed setting.
+            </p>
+          </div>
 
           {/* Speaking Style */}
           <div className="space-y-2">
