@@ -44,6 +44,14 @@ export default function ObservabilityDrawer({ open, onClose }: Props) {
           <SheetTitle className="text-white text-lg font-semibold">Observability</SheetTitle>
         </SheetHeader>
 
+        {/* InfoBox */}
+        <div style={{ background: '#0d1929', border: '1px solid #1e2d3d', borderRadius: '8px', padding: '12px 14px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+          <span style={{ fontSize: '16px', flexShrink: 0, marginTop: '1px' }}>💡</span>
+          <p style={{ color: '#8b9cb3', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>
+            Observability is how you keep an eye on your running agent. Set up logging so you can see what it&apos;s doing, enable heartbeats so it checks in regularly, and get Discord alerts if something goes wrong.
+          </p>
+        </div>
+
         {/* Log Level */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">

@@ -205,6 +205,14 @@ export default function LLMDrawer({ open, onClose }: Props) {
           <SheetTitle className="text-white text-lg font-semibold">LLM / Brain</SheetTitle>
         </SheetHeader>
 
+        {/* InfoBox */}
+        <div style={{ background: '#0d1929', border: '1px solid #1e2d3d', borderRadius: '8px', padding: '12px 14px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+          <span style={{ fontSize: '16px', flexShrink: 0, marginTop: '1px' }}>💡</span>
+          <p style={{ color: '#8b9cb3', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>
+            This is your agent&apos;s brain. You&apos;re choosing which AI model powers it. Not sure? Pick Anthropic Claude — it&apos;s reliable, smart, and works well for most tasks.
+          </p>
+        </div>
+
         {/* Provider Selector */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Provider</label>

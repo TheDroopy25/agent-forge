@@ -16,6 +16,8 @@ import {
   generateAGENTS,
   generatePython,
 } from '@/lib/generators';
+import { isElectron } from '@/lib/electron';
+import { DeployWizard } from '@/components/DeployWizard';
 
 // ─── Build sequence ──────────────────────────────────────────────────────────
 
@@ -150,12 +152,14 @@ export function BuildModal({ open, onClose }: BuildModalProps) {
 
   const [buildStep, setBuildStep] = useState(-1);
   const [buildComplete, setBuildComplete] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
 
   // Reset when modal closes
   useEffect(() => {
     if (!open) {
       setBuildStep(-1);
       setBuildComplete(false);
+      setShowWizard(false);
     }
   }, [open]);
 
@@ -275,8 +279,25 @@ export function BuildModal({ open, onClose }: BuildModalProps) {
             </div>
           )}
 
-          {/* Phase 2: Output tabs */}
-          {buildComplete && (
+          {/* Phase 2a: Deploy wizard (Electron only) */}
+          {buildComplete && showWizard && (
+            <div className="px-6 py-4">
+              <DeployWizard
+                config={{
+                  name:   agentState.identity.name,
+                  yaml:   generateOpenClawYAML(agentState),
+                  soul:   generateSOUL(agentState),
+                  agents: generateAGENTS(agentState),
+                }}
+                llmProvider={agentState.llm.provider}
+                discordEnabled={agentState.channels.discord.enabled}
+                onClose={onClose}
+              />
+            </div>
+          )}
+
+          {/* Phase 2b: Output tabs (web or pre-deploy in Electron) */}
+          {buildComplete && !showWizard && (
             <div className="px-6 py-4">
               <Tabs defaultValue="yaml">
                 <TabsList className="mb-4">
@@ -317,43 +338,50 @@ export function BuildModal({ open, onClose }: BuildModalProps) {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="shrink-0">
-          <Separator />
-          <div className="flex items-center justify-between px-6 py-4">
-            <button
-              onClick={onClose}
-              style={{
-                background: '#1e2d3d',
-                color: '#8b9cb3',
-                border: '1px solid #2d3f52',
-                borderRadius: '8px',
-                padding: '8px 18px',
-                fontSize: '13px',
-                cursor: 'pointer',
-              }}
-            >
-              Close
-            </button>
-            <button
-              onClick={() => {
-                toast('🚀 Agent deployed to OpenClaw!');
-              }}
-              style={{
-                background: '#76b900',
-                color: '#000',
-                fontWeight: 700,
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px 18px',
-                fontSize: '13px',
-                cursor: 'pointer',
-              }}
-            >
-              Deploy to OpenClaw 🚀
-            </button>
+        {/* Footer — hidden once wizard is shown */}
+        {!showWizard && (
+          <div className="shrink-0">
+            <Separator />
+            <div className="flex items-center justify-between px-6 py-4">
+              <button
+                onClick={onClose}
+                style={{
+                  background: '#1e2d3d',
+                  color: '#8b9cb3',
+                  border: '1px solid #2d3f52',
+                  borderRadius: '8px',
+                  padding: '8px 18px',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                }}
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  if (isElectron) {
+                    setShowWizard(true);
+                  } else {
+                    toast('Use the tabs above to copy or download your config files.');
+                  }
+                }}
+                disabled={!buildComplete}
+                style={{
+                  background: buildComplete ? '#76b900' : '#1e2d3d',
+                  color: buildComplete ? '#000' : '#4a5568',
+                  fontWeight: 700,
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '8px 18px',
+                  fontSize: '13px',
+                  cursor: buildComplete ? 'pointer' : 'not-allowed',
+                }}
+              >
+                {isElectron ? 'Deploy to OpenClaw 🚀' : 'Download Config Files'}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -57,6 +57,14 @@ export default function ToolsDrawer({ open, onClose }: Props) {
           <SheetTitle className="text-white text-lg font-semibold">Tools</SheetTitle>
         </SheetHeader>
 
+        {/* InfoBox */}
+        <div style={{ background: '#0d1929', border: '1px solid #1e2d3d', borderRadius: '8px', padding: '12px 14px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+          <span style={{ fontSize: '16px', flexShrink: 0, marginTop: '1px' }}>💡</span>
+          <p style={{ color: '#8b9cb3', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>
+            Tools are actions your agent can take — like searching the web, reading files, or sending emails. Toggle on what you want it to be able to do. More tools = more powerful, but also more to manage.
+          </p>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           {TOOLS.map(({ key, label, description, tooltip }) => (
             <div

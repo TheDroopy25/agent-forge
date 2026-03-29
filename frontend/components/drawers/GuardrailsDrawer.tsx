@@ -111,6 +111,14 @@ export default function GuardrailsDrawer({ open, onClose }: Props) {
           <SheetTitle className="text-white text-lg font-semibold">Guardrails</SheetTitle>
         </SheetHeader>
 
+        {/* InfoBox */}
+        <div style={{ background: '#0d1929', border: '1px solid #1e2d3d', borderRadius: '8px', padding: '12px 14px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+          <span style={{ fontSize: '16px', flexShrink: 0, marginTop: '1px' }}>💡</span>
+          <p style={{ color: '#8b9cb3', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>
+            Guardrails set limits on what your agent can do. Add things it should never say or do, set a daily cost limit so it doesn&apos;t run up a huge API bill, and define a hard-stop file path for emergencies.
+          </p>
+        </div>
+
         {/* Never Do */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">

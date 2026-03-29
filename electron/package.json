@@ -1,0 +1,44 @@
+{
+  "name": "agentforge",
+  "version": "1.0.0",
+  "description": "Build and deploy AI agents without code",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "ELECTRON_IS_DEV=1 electron .",
+    "build": "cd ../frontend && next build && cd ../electron && electron-builder",
+    "build:mac": "cd ../frontend && next build && cd ../electron && electron-builder --mac",
+    "build:win": "cd ../frontend && next build && cd ../electron && electron-builder --win",
+    "build:linux": "cd ../frontend && next build && cd ../electron && electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "dependencies": {
+    "electron-updater": "^6.0.0"
+  },
+  "build": {
+    "appId": "com.agentforge.app",
+    "productName": "AgentForge",
+    "directories": { "output": "dist" },
+    "files": [
+      "main.js",
+      "preload.js",
+      "ipc-handlers.js",
+      "../frontend/out/**/*"
+    ],
+    "mac": {
+      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
+      "icon": "icons/icon.icns"
+    },
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "icons/icon.ico"
+    },
+    "linux": {
+      "target": [{ "target": "AppImage", "arch": ["x64", "arm64"] }],
+      "icon": "icons/icon.png"
+    }
+  }
+}

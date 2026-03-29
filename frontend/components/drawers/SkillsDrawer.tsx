@@ -74,6 +74,14 @@ export default function SkillsDrawer({ open, onClose }: Props) {
           <p className="text-sm text-gray-400">Specialized capabilities for your agent</p>
         </SheetHeader>
 
+        {/* InfoBox */}
+        <div style={{ background: '#0d1929', border: '1px solid #1e2d3d', borderRadius: '8px', padding: '12px 14px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+          <span style={{ fontSize: '16px', flexShrink: 0, marginTop: '1px' }}>💡</span>
+          <p style={{ color: '#8b9cb3', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>
+            Skills are pre-built integrations for popular apps. Toggle on Discord if your agent will live in Discord, GitHub for code work, Google Workspace for email and calendar, and so on.
+          </p>
+        </div>
+
         <div className="grid grid-cols-3 gap-3">
           {SKILLS.map(({ key, label, icon }) => (
             <div

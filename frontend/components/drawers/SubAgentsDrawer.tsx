@@ -81,6 +81,14 @@ export default function SubAgentsDrawer({ open, onClose }: Props) {
           <SheetTitle className="text-white text-lg font-semibold">Sub-Agents</SheetTitle>
         </SheetHeader>
 
+        {/* InfoBox */}
+        <div style={{ background: '#0d1929', border: '1px solid #1e2d3d', borderRadius: '8px', padding: '12px 14px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+          <span style={{ fontSize: '16px', flexShrink: 0, marginTop: '1px' }}>💡</span>
+          <p style={{ color: '#8b9cb3', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>
+            Sub-agents let your agent delegate work to specialized helpers. For example, a research agent might spin up a writing agent to draft its findings. Leave this off if you&apos;re building a simple single-purpose agent.
+          </p>
+        </div>
+
         {/* Add Sub-Agent Form */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">

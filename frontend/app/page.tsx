@@ -1,15 +1,27 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { BottomBar } from '@/components/BottomBar'
 import { BuildModal } from '@/components/BuildModal'
+import { WelcomeScreen } from '@/components/WelcomeScreen'
+import { TemplateSelector } from '@/components/TemplateSelector'
 
 // Use dynamic import with ssr:false for AgentCanvas (React Flow requires browser)
 const AgentCanvas = dynamic(() => import('@/components/AgentCanvas'), { ssr: false })
 
 export default function Page() {
   const [buildOpen, setBuildOpen] = useState(false)
+  const [showWelcome, setShowWelcome] = useState(false)
+  const [showTemplates, setShowTemplates] = useState(false)
+
+  useEffect(() => {
+    if (!localStorage.getItem('agentforge_welcomed')) {
+      setShowWelcome(true)
+    } else if (!localStorage.getItem('agentforge_template_chosen')) {
+      setShowTemplates(true)
+    }
+  }, [])
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#0a0a0f' }}>
@@ -86,6 +98,19 @@ export default function Page() {
 
       <BottomBar onBuildClick={() => setBuildOpen(true)} />
       <BuildModal open={buildOpen} onClose={() => setBuildOpen(false)} />
+
+      {/* Onboarding overlays */}
+      {showWelcome && (
+        <WelcomeScreen
+          onComplete={() => {
+            setShowWelcome(false)
+            setShowTemplates(true)
+          }}
+        />
+      )}
+      {showTemplates && !showWelcome && (
+        <TemplateSelector onComplete={() => setShowTemplates(false)} />
+      )}
     </div>
   )
 }

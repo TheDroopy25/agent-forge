@@ -92,6 +92,14 @@ export default function VoiceDrawer({ open, onClose }: Props) {
           <SheetTitle className="text-white text-lg font-semibold">Voice</SheetTitle>
         </SheetHeader>
 
+        {/* InfoBox */}
+        <div style={{ background: '#0d1929', border: '1px solid #1e2d3d', borderRadius: '8px', padding: '12px 14px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+          <span style={{ fontSize: '16px', flexShrink: 0, marginTop: '1px' }}>💡</span>
+          <p style={{ color: '#8b9cb3', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>
+            Enable this if you want your agent to speak out loud. It can join voice calls, read responses aloud, or narrate content. You can leave this off if text is fine.
+          </p>
+        </div>
+
         {/* Master Toggle */}
         <div className="flex items-center gap-3">
           <Switch

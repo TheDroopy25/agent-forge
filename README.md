@@ -1,103 +1,70 @@
-# ⚡ AgentForge
+# AgentForge
 
-**Visual Agent Builder** — Design AI agents by clicking through a canvas, not writing config files.
+Build and deploy AI agents without writing a single line of code.
 
-Built by [Batch](https://github.com/brentnewsom25) (an AI assistant) as a birthday project. Inspired by the NVIDIA NemoClaw architecture.
+## What is it?
 
-![AgentForge Screenshot](./docs/screenshot.png)
+AgentForge is a visual AI agent builder. Design your agent on an interactive canvas, configure its brain, memory, tools, and channels — then deploy it directly to your computer with one click.
 
----
+## Two ways to use it
 
-## What It Does
+### 🌐 Web (agentforge.vercel.app)
+Use the visual builder to design your agent and generate config files. Download them and set up manually.
 
-AgentForge gives you an interactive canvas with 11 configuration sections. Click a node, fill it out, watch the status dot turn green. When you're ready, hit **BUILD AGENT** and get a working agent config in 4 formats — OpenClaw YAML, SOUL.md, AGENTS.md, and Python/LangGraph.
+### 🖥️ Desktop App (recommended)
+Download the app for your platform. Everything happens locally — no account needed, no cloud.
 
-### The 11 Sections
-
-| Section | What You Configure |
+| Platform | Download |
 |---|---|
-| 🧠 Identity | Name, avatar, purpose, personality sliders (verbosity, tone, humor, assertiveness) |
-| 🤖 LLM / Brain | Provider (OpenAI/Anthropic/Google/Mistral/Ollama/NVIDIA NIM), model, temperature, fallback chain |
-| 🎙️ Voice | TTS provider (ElevenLabs/Azure/OpenAI/Kokoro), voice picker, speed, preview |
-| 💾 Memory | Short-term, long-term (vector), episodic (daily files), working memory, external DB |
-| 📁 Data / Context | File upload, URL indexer, API connections |
-| 🔧 Tools | Web search, code exec, browser control, file system, terminal, and more |
-| ⚡ Skills | Pre-built skill packs (Discord, GitHub, Google Workspace, etc.) |
-| 👥 Sub-Agents | Child agents, routing mode, coordinator vs worker role |
-| 📡 Channels | Discord, Telegram, REST API, SMS/Twilio, CLI |
-| 🛡️ Guardrails | Never-do list, cost limits, token budget, hard stop file |
-| 📊 Observability | Log level, heartbeat interval, Discord alerts, trace output |
+| macOS | AgentForge-1.0.0.dmg |
+| Windows | AgentForge-Setup-1.0.0.exe |
+| Linux | AgentForge-1.0.0.AppImage |
 
-### Build Output
+## Development
 
-Once configured, AgentForge generates:
-- **OpenClaw YAML** — drop-in agent config for [OpenClaw](https://openclaw.ai)
-- **SOUL.md** — agent personality and values document
-- **AGENTS.md** — workspace instructions for the agent
-- **Python (LangGraph)** — skeleton agent you can run standalone
-
----
-
-## Quick Start
-
-### Prerequisites
-- Node.js 18+
-- npm or pnpm
-
-### Install & Run
-
+### Run the web app
 ```bash
-git clone https://github.com/brentnewsom25/agent-forge.git
-cd agent-forge/frontend
+cd frontend
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
-
-### Build for Production
-
+### Run the desktop app (dev mode)
 ```bash
-npm run build
-npm start
+# Terminal 1: start Next.js
+cd frontend && npm run dev
+
+# Terminal 2: start Electron (pointing at localhost:3000)
+cd electron && npm install && ELECTRON_IS_DEV=1 node_modules/.bin/electron .
 ```
 
----
+### Build desktop installers
+```bash
+cd frontend && npm run build    # build static export
+cd ../electron && npm run build # package with electron-builder
+# Output: electron/dist/
+```
 
-## Tech Stack
+## Architecture
 
-- **Next.js 14** (App Router) + TypeScript
-- **React Flow** (`@xyflow/react`) — interactive canvas
-- **Framer Motion** — animations
-- **Zustand** — state management
-- **shadcn/ui** — UI components
-- **Tailwind CSS** — styling
-- **react-syntax-highlighter** — code output
+```
+agentforge/
+├── frontend/          # Next.js 16 app (React, Zustand, React Flow)
+│   ├── app/           # App Router pages
+│   ├── components/    # UI components (canvas, drawers, modals, wizards)
+│   ├── store/         # Zustand state
+│   └── lib/           # Code generators + Electron bridge
+└── electron/          # Desktop app wrapper
+    ├── main.js        # Electron main process
+    ├── preload.js     # Context bridge (window.electronAPI)
+    └── ipc-handlers.js # Deploy pipeline, prereq checks, file writing
+```
 
----
+## How deploy works
 
-## Design
-
-NVIDIA-inspired dark theme:
-- Background: `#0a0a0f`
-- Cards: `#12121a`
-- Accent: `#76b900` (NVIDIA green)
-- Cyan: `#00d4ff`
-
----
-
-## Roadmap
-
-- [ ] Save/load agent configs (local storage + import/export JSON)
-- [ ] Real voice preview (ElevenLabs API)
-- [ ] WhatsApp channel support
-- [ ] Multi-agent canvas (sub-agents as nested nodes)
-- [ ] Real file upload processing
-- [ ] One-click deploy to OpenClaw
-- [ ] Agent versioning / history
-
----
-
-## License
-
-MIT — build whatever you want with it.
+1. User configures agent on visual canvas
+2. Clicks **Deploy to OpenClaw**
+3. Electron checks for Node 18+ and OpenClaw — installs if missing
+4. Writes agent config files to `~/openclaw-agents/<name>/`
+5. Runs `openclaw start` and streams progress back
+6. Agent is live 🎉

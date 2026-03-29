@@ -47,6 +47,14 @@ export default function MemoryDrawer({ open, onClose }: Props) {
           <SheetTitle className="text-white text-lg font-semibold">Memory</SheetTitle>
         </SheetHeader>
 
+        {/* InfoBox */}
+        <div style={{ background: '#0d1929', border: '1px solid #1e2d3d', borderRadius: '8px', padding: '12px 14px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+          <span style={{ fontSize: '16px', flexShrink: 0, marginTop: '1px' }}>💡</span>
+          <p style={{ color: '#8b9cb3', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>
+            Memory lets your agent remember things between conversations. Short-term memory keeps recent messages in context. Long-term memory stores facts forever. Without memory, every chat starts fresh.
+          </p>
+        </div>
+
         {/* Short-term Memory */}
         <div className="border border-[#1e2d3d] rounded-lg overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3">

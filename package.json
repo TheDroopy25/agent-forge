@@ -1,0 +1,18 @@
+{
+  "name": "agentforge-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AgentForge — build and deploy AI agents without code",
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "electron:dev": "concurrently \"cd frontend && npm run dev\" \"sleep 5 && cd electron && ELECTRON_IS_DEV=1 node_modules/.bin/electron .\"",
+    "electron:build": "cd frontend && npm run build && cd ../electron && npm install && npm run build",
+    "electron:build:mac": "cd frontend && npm run build && cd ../electron && npm install && npm run build:mac",
+    "electron:build:win": "cd frontend && npm run build && cd ../electron && npm install && npm run build:win",
+    "electron:build:linux": "cd frontend && npm run build && cd ../electron && npm install && npm run build:linux"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0"
+  }
+}
