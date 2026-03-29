@@ -75,23 +75,8 @@ export default function IdentityDrawer({ open, onClose }: Props) {
         <div style={{ background: '#0d1929', border: '1px solid #1e2d3d', borderRadius: '8px', padding: '12px 14px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
           <span style={{ fontSize: '16px', flexShrink: 0, marginTop: '1px' }}>💡</span>
           <p style={{ color: '#8b9cb3', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>
-            This is your agent&apos;s personality. Give it a name, describe what it&apos;s for, and use the sliders to tune how it communicates — formal or casual, serious or witty.
+            This is your agent&apos;s personality. Describe what it&apos;s for, and use the sliders to tune how it communicates — formal or casual, serious or witty.
           </p>
-        </div>
-
-        {/* Agent Name */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-300">Agent Name</label>
-            <Tip text="The name your agent introduces itself as. Used in SOUL.md and all generated configs. No performance impact." />
-          </div>
-          <input
-            type="text"
-            value={identity.name}
-            onChange={(e) => setIdentity({ name: e.target.value })}
-            placeholder="e.g. Nexus, Atlas, Sage..."
-            className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#76b900] transition-colors"
-          />
         </div>
 
         {/* Avatar Picker */}
