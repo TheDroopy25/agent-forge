@@ -36,6 +36,14 @@ const VOICES: Record<string, string[]> = {
   kokoro:     ['af_heart', 'am_adam'],
 };
 
+const ELEVENLABS_VOICE_IDS: Record<string, string> = {
+  Rachel: '21m00Tcm4TlvDq8ikWAM',
+  Domi:   'AZnzlk1XvdvUeBnXmlld',
+  Bella:  'EXAVITQu4vr4xnSDxMaL',
+  Josh:   'TxGEqnHWrfWFTfGW9XjX',
+  Adam:   'pNInz6obpgDQGcFmaJgB',
+};
+
 const SPEAKING_STYLES = [
   { value: 'conversational',   label: 'Conversational (natural, relaxed)' },
   { value: 'narrative',        label: 'Narrative (storytelling)' },
@@ -69,6 +77,7 @@ export default function VoiceDrawer({ open, onClose }: Props) {
   const setVoice = useAgentStore((s) => s.setVoice);
   const agentName = useAgentStore((s) => s.identity.name);
   const [previewing, setPreviewing] = useState(false);
+  const [previewError, setPreviewError] = useState('');
   const [apiKey, setApiKey] = useState('');
 
   const currentVoices = VOICES[voice.provider] ?? [];
@@ -77,22 +86,52 @@ export default function VoiceDrawer({ open, onClose }: Props) {
     const firstVoice = VOICES[id]?.[0] ?? '';
     setVoice({ provider: id, voiceId: firstVoice });
     setApiKey('');
+    setPreviewError('');
   }
 
-  function handlePreview() {
-    if (typeof window === 'undefined' || !window.speechSynthesis) {
+  async function handlePreview() {
+    setPreviewError('');
+    setPreviewing(true);
+    const text = `Hi, I'm ${agentName || 'your agent'}. I can speak using this voice.`;
+    try {
+      if (voice.provider === 'elevenlabs') {
+        const voiceId = ELEVENLABS_VOICE_IDS[voice.voiceId] ?? ELEVENLABS_VOICE_IDS['Rachel'];
+        const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+          method: 'POST',
+          headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text,
+            model_id: 'eleven_monolingual_v1',
+            voice_settings: { stability: 0.5, similarity_boost: 0.5 },
+          }),
+        });
+        if (!response.ok) throw new Error('bad_key');
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.onended = () => setPreviewing(false);
+        audio.onerror = () => { setPreviewing(false); setPreviewError('Preview failed — check your API key'); };
+        audio.play();
+      } else if (voice.provider === 'openai') {
+        const response = await fetch('https://api.openai.com/v1/audio/speech', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'tts-1', input: text, voice: voice.voiceId }),
+        });
+        if (!response.ok) throw new Error('bad_key');
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.onended = () => setPreviewing(false);
+        audio.onerror = () => { setPreviewing(false); setPreviewError('Preview failed — check your API key'); };
+        audio.play();
+      } else {
+        setPreviewing(false);
+      }
+    } catch {
       setPreviewing(false);
-      return;
+      setPreviewError('Preview failed — check your API key');
     }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(
-      `Hi, I'm ${agentName || 'your agent'}. I'm ready to help you with anything you need.`
-    );
-    utterance.rate = voice.speed;
-    utterance.onstart = () => setPreviewing(true);
-    utterance.onend = () => setPreviewing(false);
-    utterance.onerror = () => setPreviewing(false);
-    window.speechSynthesis.speak(utterance);
   }
 
   const disabled = !voice.enabled;
@@ -278,23 +317,36 @@ export default function VoiceDrawer({ open, onClose }: Props) {
           </div>
 
           {/* Preview Button */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handlePreview}
-                disabled={previewing}
-                className="px-4 py-2 rounded-md border border-[#76b900] text-[#76b900] text-sm font-medium hover:bg-[#76b900]/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                PREVIEW
-              </button>
-              {previewing && (
-                <span className="text-sm text-[#76b900]">🎵 Speaking...</span>
-              )}
-            </div>
-            <p className="text-xs text-gray-500">
-              Preview uses your browser&apos;s built-in voice. Your actual agent will use the provider you selected above.
-            </p>
-          </div>
+          {(() => {
+            const isKokoro = voice.provider === 'kokoro';
+            const isAzure = voice.provider === 'azure';
+            const hasKey = apiKey.trim().length > 0;
+            const canPreview = !isKokoro && !isAzure && hasKey;
+            let statusMsg = '';
+            if (isKokoro) statusMsg = 'Kokoro runs locally — preview available after deploying your agent.';
+            else if (isAzure) statusMsg = 'Azure preview requires your agent to be running locally. Deploy first, then test your voice.';
+            else if (!hasKey) statusMsg = 'Enter your API key above to preview';
+            return (
+              <div className="space-y-2">
+                <button
+                  onClick={handlePreview}
+                  disabled={!canPreview || previewing}
+                  className={`px-4 py-2 rounded-md border text-sm font-medium transition-colors disabled:cursor-not-allowed ${
+                    canPreview
+                      ? 'border-[#76b900] text-[#76b900] hover:bg-[#76b900]/10 disabled:opacity-60'
+                      : 'border-gray-600 text-gray-500 opacity-50'
+                  }`}
+                >
+                  {previewing ? 'Playing...' : 'PREVIEW'}
+                </button>
+                {previewError ? (
+                  <p className="text-xs text-red-400">{previewError}</p>
+                ) : statusMsg ? (
+                  <p className="text-xs text-gray-500">{statusMsg}</p>
+                ) : null}
+              </div>
+            );
+          })()}
 
           {/* Speed Slider */}
           <div className="space-y-2">
