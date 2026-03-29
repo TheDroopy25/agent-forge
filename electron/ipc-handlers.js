@@ -157,38 +157,65 @@ function registerHandlers(ipcMain, getWindow) {
         fs.writeFileSync(path.join(envDir, `${safeName}.conf`), lines.join('\n') + '\n', 'utf8');
       }
 
-      // Step 5 — Start agent
+      // Step 5 — Register agent with OpenClaw + get real agentId
+      send('Registering your agent... 🔧');
+
+      let agentId = null;
+      await new Promise((resolve) => {
+        const proc = spawn('openclaw', ['agents', 'add', safeName, '--workspace', workspaceDir, '--json'], {
+          shell: true, stdio: 'pipe',
+        });
+        let output = '';
+        proc.stdout.on('data', (d) => { output += d.toString(); });
+        proc.stderr.on('data', (d) => { output += d.toString(); });
+        proc.on('close', () => {
+          // Try to parse agentId from JSON output
+          try {
+            const parsed = JSON.parse(output.trim());
+            agentId = parsed.id || parsed.agentId || parsed.agent?.id || null;
+          } catch (_) {
+            // Fallback: parse "id: <id>" or "agentId: <id>" from output
+            const match = output.match(/"?id"?\s*[:=]\s*"?([a-zA-Z0-9_-]+)"?/i);
+            if (match) agentId = match[1];
+          }
+          resolve();
+        });
+        proc.on('error', () => resolve()); // non-fatal — fall back to workspace-relative path
+      });
+
+      // If we got a real agentId, move auth-profiles.json to the correct OpenClaw path
+      if (agentId) {
+        const ocAgentDir = path.join(os.homedir(), '.openclaw', 'agents', agentId, 'agent');
+        const workspaceAuthFile = path.join(workspaceDir, 'agent', 'auth-profiles.json');
+        if (fs.existsSync(workspaceAuthFile)) {
+          fs.mkdirSync(ocAgentDir, { recursive: true });
+          fs.copyFileSync(workspaceAuthFile, path.join(ocAgentDir, 'auth-profiles.json'));
+        }
+      }
+
+      // Step 6 — Restart gateway to pick up new agent
       send('Starting your agent... 🚀');
 
       await new Promise((resolve) => {
-        const cmd = 'openclaw';
-        const args = ['start', '--workspace', workspaceDir];
-        const proc = spawn(cmd, args, { shell: true, detached: true, stdio: 'pipe' });
-
+        const proc = spawn('openclaw', ['gateway', 'restart'], {
+          shell: true, detached: true, stdio: 'pipe',
+        });
         let settled = false;
         const settle = () => {
-          if (!settled) {
-            settled = true;
-            try { proc.unref(); } catch (_) {}
-            resolve();
-          }
+          if (!settled) { settled = true; try { proc.unref(); } catch (_) {} resolve(); }
         };
-
-        const timeout = setTimeout(settle, 5000);
-
+        const timeout = setTimeout(settle, 8000);
         proc.stdout.on('data', (d) => {
           const line = d.toString().toLowerCase();
-          if (line.includes('gateway') || line.includes('started') || line.includes('ready')) {
-            clearTimeout(timeout);
-            settle();
+          if (line.includes('ready') || line.includes('started') || line.includes('restarted')) {
+            clearTimeout(timeout); settle();
           }
         });
-
         proc.on('error', () => { clearTimeout(timeout); settle(); });
         proc.on('close', () => { clearTimeout(timeout); settle(); });
       });
 
-      // Step 6 — Done
+      // Step 7 — Done
       send('Your agent is live! 🎉');
 
       return { success: true, workspacePath: workspaceDir };
