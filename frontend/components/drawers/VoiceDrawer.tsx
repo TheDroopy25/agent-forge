@@ -26,16 +26,28 @@ const PROVIDER_TOOLTIPS: Record<string, string> = {
 };
 
 const VOICES: Record<string, string[]> = {
-  elevenlabs: ['Rachel', 'Domi', 'Bella', 'Josh', 'Adam'],
-  openai:     ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'],
+  elevenlabs: [
+    'Sarah - Mature, Reassuring',
+    'Brian - Deep, Comforting',
+    'Alice - Clear, Engaging',
+    'Eric - Smooth, Trustworthy',
+    'Matilda - Knowledgeable, Professional',
+    'Adam - Dominant, Firm',
+    'Jessica - Playful, Warm',
+    'George - Warm Storyteller',
+  ],
+  openai: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'],
 };
 
 const ELEVENLABS_VOICE_IDS: Record<string, string> = {
-  Rachel: '21m00Tcm4TlvDq8ikWAM',
-  Domi:   'AZnzlk1XvdvUeBnXmlld',
-  Bella:  'EXAVITQu4vr4xnSDxMaL',
-  Josh:   'TxGEqnHWrfWFTfGW9XjX',
-  Adam:   'pNInz6obpgDQGcFmaJgB',
+  'Sarah - Mature, Reassuring':       'EXAVITQu4vr4xnSDxMaL',
+  'Brian - Deep, Comforting':         'nPczCjzI2devNBz1zQrb',
+  'Alice - Clear, Engaging':          'Xb7hH8MSUJpSbSDYk0k2',
+  'Eric - Smooth, Trustworthy':       'cjVigY5qzO86Huf0OWal',
+  'Matilda - Knowledgeable, Professional': 'XrExE9yKIg1WjnnlVkGX',
+  'Adam - Dominant, Firm':            'pNInz6obpgDQGcFmaJgB',
+  'Jessica - Playful, Warm':          'cgSgspJ2msm6clMCkdW9',
+  'George - Warm Storyteller':        'JBFqnCBsd6RMkjVDRZzb',
 };
 
 const SPEAKING_STYLES = [
@@ -95,7 +107,7 @@ export default function VoiceDrawer({ open, onClose }: Props) {
           headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text,
-            model_id: 'eleven_monolingual_v1',
+            model_id: 'eleven_turbo_v2_5',
             voice_settings: { stability: 0.5, similarity_boost: 0.5 },
           }),
         });
