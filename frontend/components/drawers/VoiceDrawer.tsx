@@ -214,7 +214,7 @@ export default function VoiceDrawer({ open, onClose }: Props) {
 
           {/* API Key Section */}
           {voice.provider === 'elevenlabs' && (
-            <div className="space-y-2 rounded-lg border border-[#1e2d3d] bg-[#0d1929] p-4">
+            <div className="space-y-3 rounded-lg border border-[#1e2d3d] bg-[#0d1929] p-4">
               <p className="text-sm font-medium text-white">ElevenLabs API Key</p>
               <input
                 type="password"
@@ -223,17 +223,28 @@ export default function VoiceDrawer({ open, onClose }: Props) {
                 placeholder="Paste your API key here"
                 className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900] transition-colors"
               />
-              <p className="text-xs text-gray-500">
-                Don&apos;t have one? Get a free key at elevenlabs.io — free tier includes 10,000 characters per month.
-              </p>
-              <a
-                href="https://elevenlabs.io"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-[#76b900] hover:underline"
-              >
-                Get a free ElevenLabs key →
-              </a>
+
+              {/* Step-by-step signup guide */}
+              <div style={{ background: '#0a0a14', border: '1px solid #1e2d3d', borderRadius: '8px', padding: '12px' }}>
+                <p className="text-xs font-semibold text-gray-300 mb-2">How to get a free key (takes 2 minutes):</p>
+                <ol style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <li className="text-xs text-gray-400">
+                    Go to <a href="https://elevenlabs.io" target="_blank" rel="noopener noreferrer" className="text-[#76b900] hover:underline">elevenlabs.io</a> and click <strong className="text-gray-300">Sign up</strong>
+                  </li>
+                  <li className="text-xs text-gray-400">
+                    Create your account with your email and a password
+                  </li>
+                  <li className="text-xs text-gray-400">
+                    When asked <em>&ldquo;What are you looking for?&rdquo;</em> — select <strong className="text-gray-300">Personal use</strong> and click Continue
+                  </li>
+                  <li className="text-xs text-gray-400">
+                    You&apos;ll see a &ldquo;Select a plan&rdquo; screen. <strong className="text-[#76b900]">Do not click any plan.</strong> Look for the small <strong className="text-gray-300">&ldquo;Skip&rdquo;</strong> link at the bottom of the page — click that to stay on the free plan (10,000 characters/month, no credit card needed)
+                  </li>
+                  <li className="text-xs text-gray-400">
+                    Once inside, click your profile icon in the top-right corner → <strong className="text-gray-300">Profile</strong> → scroll down to find your <strong className="text-gray-300">API Key</strong> → copy it and paste it above
+                  </li>
+                </ol>
+              </div>
             </div>
           )}
 
