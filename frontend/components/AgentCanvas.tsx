@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -60,7 +60,8 @@ const HUB_OFFSET_Y = -80; // half of 160px hub
 
 function AgentCanvasInner() {
   const sectionComplete = useAgentStore((s) => s.sectionComplete);
-  const [activeDrawer, setActiveDrawer] = useState<SectionId | null>(null);
+  const activeDrawer = useAgentStore((s) => s.activeDrawer);
+  const setActiveDrawer = useAgentStore((s) => s.setActiveDrawer);
 
   // Build static nodes — hub + 11 section nodes
   const nodes = useMemo<Node[]>(() => {

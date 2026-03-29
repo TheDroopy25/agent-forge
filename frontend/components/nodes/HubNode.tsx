@@ -11,6 +11,7 @@ type HubNodeData = {
 export default function HubNode({ data }: NodeProps & { data: HubNodeData }) {
   const name = useAgentStore((s) => s.identity.name);
   const setIdentity = useAgentStore((s) => s.setIdentity);
+  const setActiveDrawer = useAgentStore((s) => s.setActiveDrawer);
 
   const hasName = name.length > 0;
 
@@ -75,6 +76,12 @@ export default function HubNode({ data }: NodeProps & { data: HubNodeData }) {
         <input
           value={name}
           onChange={(e) => setIdentity({ name: e.target.value })}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && name.trim().length > 0) {
+              e.currentTarget.blur();
+              setActiveDrawer('identity');
+            }
+          }}
           placeholder="Name your agent..."
           className="nodrag"
           style={{

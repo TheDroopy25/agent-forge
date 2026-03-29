@@ -131,6 +131,10 @@ export interface AgentState {
   nextStep: string | null;
   agentNamed: boolean;
 
+  // UI state
+  activeDrawer: string | null;
+  setActiveDrawer: (drawer: string | null) => void;
+
   // Actions
   setIdentity: (data: Partial<AgentState['identity']>) => void;
   setLLM: (data: Partial<AgentState['llm']>) => void;
@@ -148,7 +152,7 @@ export interface AgentState {
 
 // ─── Section Completion Logic ─────────────────────────────────────────────────
 
-function computeSectionComplete(state: Omit<AgentState, 'sectionComplete' | 'completedCount' | 'nextStep' | 'agentNamed' | keyof ActionKeys>): Record<string, boolean> {
+function computeSectionComplete(state: Omit<AgentState, 'sectionComplete' | 'completedCount' | 'nextStep' | 'agentNamed' | 'activeDrawer' | 'setActiveDrawer' | keyof ActionKeys>): Record<string, boolean> {
   const { identity, llm, voice, memory, data, tools, skills, subAgents, channels, guardrails, observability } = state;
 
   const anyMemoryEnabled =
@@ -397,6 +401,9 @@ export const useAgentStore = create<AgentState>()(
     (set) => ({
       ...initialStateSlice,
       ...initialDerived,
+
+      activeDrawer: null,
+      setActiveDrawer: (drawer) => set({ activeDrawer: drawer }, false, 'setActiveDrawer'),
 
       setIdentity: (data) =>
         set(
