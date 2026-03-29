@@ -11,13 +11,15 @@ interface VoiceProvider {
   name: string;
   description: string;
   color: string;
+  badge?: string;
+  recommend?: boolean;
 }
 
 const VOICE_PROVIDERS: VoiceProvider[] = [
-  { id: 'elevenlabs', name: 'ElevenLabs', description: 'Hyper-realistic voices',  color: '#f59e0b' },
-  { id: 'azure',      name: 'Azure TTS',  description: 'Microsoft Neural voices', color: '#0078d4' },
-  { id: 'openai',     name: 'OpenAI TTS', description: 'High-quality synthesis',  color: '#10a37f' },
-  { id: 'kokoro',     name: 'Kokoro',     description: 'Lightweight open model',  color: '#8b5cf6' },
+  { id: 'elevenlabs', name: 'ElevenLabs', description: 'Most realistic voices — requires a free account', color: '#f59e0b' },
+  { id: 'azure',      name: 'Azure TTS',  description: 'Microsoft voices — requires Azure account',       color: '#0078d4' },
+  { id: 'openai',     name: 'OpenAI TTS', description: 'Clean voices — requires OpenAI account',          color: '#10a37f' },
+  { id: 'kokoro',     name: 'Kokoro',     description: 'Free voices — no account, runs on your computer', color: '#8b5cf6', badge: 'FREE • No account needed', recommend: true },
 ];
 
 const PROVIDER_TOOLTIPS: Record<string, string> = {
@@ -35,12 +37,12 @@ const VOICES: Record<string, string[]> = {
 };
 
 const SPEAKING_STYLES = [
-  'conversational',
-  'narrative',
-  'newscast',
-  'customerservice',
-  'cheerful',
-  'empathetic',
+  { value: 'conversational',   label: 'Conversational (natural, relaxed)' },
+  { value: 'narrative',        label: 'Narrative (storytelling)' },
+  { value: 'newscast',         label: 'Newscast (clear, authoritative)' },
+  { value: 'customerservice',  label: 'Customer Service (helpful, patient)' },
+  { value: 'cheerful',         label: 'Cheerful (upbeat, energetic)' },
+  { value: 'empathetic',       label: 'Empathetic (warm, understanding)' },
 ];
 
 const selectClass =
@@ -50,7 +52,7 @@ function Tip({ text }: { text: string }) {
   return (
     <div className="group relative">
       <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
-      <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+      <div className="absolute left-0 top-full z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl" style={{ marginTop: 4 }}>
         <p className="text-xs text-gray-300 leading-relaxed">{text}</p>
       </div>
     </div>
@@ -65,19 +67,32 @@ interface Props {
 export default function VoiceDrawer({ open, onClose }: Props) {
   const voice = useAgentStore((s) => s.voice);
   const setVoice = useAgentStore((s) => s.setVoice);
+  const agentName = useAgentStore((s) => s.identity.name);
   const [previewing, setPreviewing] = useState(false);
+  const [apiKey, setApiKey] = useState('');
 
   const currentVoices = VOICES[voice.provider] ?? [];
 
   function handleProviderSelect(id: string) {
     const firstVoice = VOICES[id]?.[0] ?? '';
     setVoice({ provider: id, voiceId: firstVoice });
+    setApiKey('');
   }
 
   function handlePreview() {
-    if (previewing) return;
-    setPreviewing(true);
-    setTimeout(() => setPreviewing(false), 2000);
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      setPreviewing(false);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(
+      `Hi, I'm ${agentName || 'your agent'}. I'm ready to help you with anything you need.`
+    );
+    utterance.rate = voice.speed;
+    utterance.onstart = () => setPreviewing(true);
+    utterance.onend = () => setPreviewing(false);
+    utterance.onerror = () => setPreviewing(false);
+    window.speechSynthesis.speak(utterance);
   }
 
   const disabled = !voice.enabled;
@@ -128,33 +143,122 @@ export default function VoiceDrawer({ open, onClose }: Props) {
                   <button
                     key={p.id}
                     onClick={() => handleProviderSelect(p.id)}
-                    className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
+                    className={`flex flex-col gap-1.5 p-3 rounded-lg border text-left transition-all ${
                       selected
                         ? 'border-[#76b900] bg-[#76b900]/10'
                         : 'border-[#1e2d3d] bg-[#1a1a2e] hover:border-[#76b900]/40'
                     }`}
                   >
-                    <div
-                      className="w-8 h-8 rounded-md flex-shrink-0"
-                      style={{ backgroundColor: p.color }}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-sm font-medium text-white truncate">{p.name}</p>
-                        <div className="group relative flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-6 h-6 rounded-md flex-shrink-0"
+                        style={{ backgroundColor: p.color }}
+                      />
+                      <p className="text-sm font-medium text-white">{p.name}</p>
+                      <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <div className="group relative">
                           <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
-                          <div className="absolute right-0 top-5 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+                          <div className="absolute left-0 top-full z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl" style={{ marginTop: 4 }}>
                             <p className="text-xs text-gray-300 leading-relaxed">{PROVIDER_TOOLTIPS[p.id]}</p>
                           </div>
                         </div>
                       </div>
-                      <p className="text-xs text-gray-500 truncate">{p.description}</p>
                     </div>
+                    <p className="text-xs text-gray-400 leading-snug">{p.description}</p>
+                    {p.badge && (
+                      <span className="inline-block self-start text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#052e16', color: '#4ade80', border: '1px solid #166534' }}>
+                        {p.badge}
+                      </span>
+                    )}
+                    {p.recommend && (
+                      <span className="text-xs text-yellow-400">⭐ Start here</span>
+                    )}
                   </button>
                 );
               })}
             </div>
           </div>
+
+          {/* API Key Section */}
+          {voice.provider === 'elevenlabs' && (
+            <div className="space-y-2 rounded-lg border border-[#1e2d3d] bg-[#0d1929] p-4">
+              <p className="text-sm font-medium text-white">ElevenLabs API Key</p>
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Paste your API key here"
+                className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900] transition-colors"
+              />
+              <p className="text-xs text-gray-500">
+                Don&apos;t have one? Get a free key at elevenlabs.io — free tier includes 10,000 characters per month.
+              </p>
+              <a
+                href="https://elevenlabs.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-[#76b900] hover:underline"
+              >
+                Get a free ElevenLabs key →
+              </a>
+            </div>
+          )}
+
+          {voice.provider === 'azure' && (
+            <div className="space-y-2 rounded-lg border border-[#1e2d3d] bg-[#0d1929] p-4">
+              <p className="text-sm font-medium text-white">Azure Speech API Key</p>
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Paste your API key here"
+                className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900] transition-colors"
+              />
+              <p className="text-xs text-gray-500">
+                Get your key from the Azure portal under &quot;Speech Services&quot;. Free tier includes 500,000 characters per month.
+              </p>
+              <a
+                href="https://azure.microsoft.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-[#76b900] hover:underline"
+              >
+                Get an Azure Speech key →
+              </a>
+            </div>
+          )}
+
+          {voice.provider === 'openai' && (
+            <div className="space-y-2 rounded-lg border border-[#1e2d3d] bg-[#0d1929] p-4">
+              <p className="text-sm font-medium text-white">OpenAI API Key</p>
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Paste your API key here"
+                className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900] transition-colors"
+              />
+              <p className="text-xs text-gray-500">
+                Same key you use for the ChatGPT API. Get one at platform.openai.com.
+              </p>
+              <a
+                href="https://platform.openai.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-[#76b900] hover:underline"
+              >
+                Get an OpenAI API key →
+              </a>
+            </div>
+          )}
+
+          {voice.provider === 'kokoro' && (
+            <div className="rounded-lg border p-4" style={{ background: '#052e16', borderColor: '#166534' }}>
+              <p className="text-sm text-green-400">
+                ✅ No API key needed. Kokoro runs locally on your computer — completely free, completely private.
+              </p>
+            </div>
+          )}
 
           {/* Voice Picker */}
           <div className="space-y-2">
@@ -174,16 +278,22 @@ export default function VoiceDrawer({ open, onClose }: Props) {
           </div>
 
           {/* Preview Button */}
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handlePreview}
-              className="px-4 py-2 rounded-md border border-[#76b900] text-[#76b900] text-sm font-medium hover:bg-[#76b900]/10 transition-colors"
-            >
-              PREVIEW
-            </button>
-            {previewing && (
-              <span className="text-sm text-[#76b900]">🎵 Playing preview...</span>
-            )}
+          <div className="space-y-2">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handlePreview}
+                disabled={previewing}
+                className="px-4 py-2 rounded-md border border-[#76b900] text-[#76b900] text-sm font-medium hover:bg-[#76b900]/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                PREVIEW
+              </button>
+              {previewing && (
+                <span className="text-sm text-[#76b900]">🎵 Speaking...</span>
+              )}
+            </div>
+            <p className="text-xs text-gray-500">
+              Preview uses your browser&apos;s built-in voice. Your actual agent will use the provider you selected above.
+            </p>
           </div>
 
           {/* Speed Slider */}
@@ -221,7 +331,7 @@ export default function VoiceDrawer({ open, onClose }: Props) {
               className={selectClass}
             >
               {SPEAKING_STYLES.map((s) => (
-                <option key={s} value={s} className="capitalize">{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </select>
           </div>
