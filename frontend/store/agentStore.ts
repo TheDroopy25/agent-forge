@@ -148,8 +148,8 @@ export interface AgentState {
 
 // ─── Section Completion Logic ─────────────────────────────────────────────────
 
-function computeSectionComplete(state: Omit<AgentState, 'sectionComplete' | 'completedCount' | keyof ActionKeys>): Record<string, boolean> {
-  const { identity, llm, memory, data, tools, skills, subAgents, channels, guardrails, observability } = state;
+function computeSectionComplete(state: Omit<AgentState, 'sectionComplete' | 'completedCount' | 'nextStep' | 'agentNamed' | keyof ActionKeys>): Record<string, boolean> {
+  const { identity, llm, voice, memory, data, tools, skills, subAgents, channels, guardrails, observability } = state;
 
   const anyMemoryEnabled =
     memory.shortTerm.enabled ||
