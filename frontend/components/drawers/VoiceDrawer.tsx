@@ -137,12 +137,12 @@ export default function VoiceDrawer({ open, onClose }: Props) {
         });
         if (!response.ok) throw new Error('bad_key');
         const blob = await response.blob();
-        await playWithSpeed(blob, voice.speed, () => setPreviewing(false));
+        await playWithSpeed(blob, 1.0, () => setPreviewing(false));
       } else if (voice.provider === 'openai') {
         const response = await fetch('https://api.openai.com/v1/audio/speech', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'tts-1', input: text, voice: voice.voiceId }),
+          body: JSON.stringify({ model: 'tts-1', input: text, voice: voice.voiceId, speed: voice.speed }),
         });
         if (!response.ok) throw new Error('bad_key');
         const blob = await response.blob();
@@ -353,28 +353,36 @@ export default function VoiceDrawer({ open, onClose }: Props) {
             );
           })()}
 
-          {/* Speed Slider */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-300">Speed</label>
-                <Tip text="0.5x sounds slow and deliberate — good for instructions or accessibility. 1.0x is natural speech. 1.5-2.0x sounds rushed — use for quick notifications only." />
+          {/* Speed Slider — OpenAI only (ElevenLabs doesn't support speed adjustment) */}
+          {voice.provider === 'openai' ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-300">Speed</label>
+                  <Tip text="0.5x sounds slow and deliberate — good for instructions or accessibility. 1.0x is natural speech. 1.5-2.0x sounds faster — use for quick notifications only." />
+                </div>
+                <span className="text-sm text-[#76b900] font-mono">{voice.speed.toFixed(1)}x</span>
               </div>
-              <span className="text-sm text-[#76b900] font-mono">{voice.speed.toFixed(1)}x</span>
+              <Slider
+                min={0.5}
+                max={2.0}
+                step={0.1}
+                value={[voice.speed]}
+                onValueChange={(val) => setVoice({ speed: Array.isArray(val) ? (val as number[])[0] : (val as number) })}
+                className="w-full"
+              />
+              <div className="flex justify-between">
+                <span className="text-xs text-gray-500">0.5x (Slow)</span>
+                <span className="text-xs text-gray-500">2.0x (Fast)</span>
+              </div>
             </div>
-            <Slider
-              min={0.5}
-              max={2.0}
-              step={0.1}
-              value={[voice.speed]}
-              onValueChange={(val) => setVoice({ speed: Array.isArray(val) ? (val as number[])[0] : (val as number) })}
-              className="w-full"
-            />
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-500">0.5x (Slow)</span>
-              <span className="text-xs text-gray-500">2.0x (Fast)</span>
+          ) : (
+            <div style={{ background: '#0d1929', border: '1px solid #1e2d3d', borderRadius: '8px', padding: '10px 14px' }}>
+              <p className="text-xs text-gray-500">
+                💡 ElevenLabs doesn&apos;t support speed adjustment. Speaking pace is controlled by the voice and style you choose above.
+              </p>
             </div>
-          </div>
+          )}
 
           {/* Speaking Style */}
           <div className="space-y-2">
