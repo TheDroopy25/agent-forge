@@ -106,14 +106,14 @@ export default function IdentityDrawer({ open, onClose }: Props) {
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-gray-300">Purpose</label>
-            <Tip text="One sentence describing what this agent does. Feeds into the system prompt. Clearer = better behavior. No resource cost." />
+            <Tip text="This goes directly into your agent's personality file — it tells the agent who it is and what its job is. The more specific you are, the better it behaves. Examples: 'You help me remember appointments and send reminders.' / 'You answer questions about my small business inventory.' / 'You check my email and summarize anything important.'" />
           </div>
           <textarea
             rows={4}
             maxLength={160}
             value={identity.purpose}
             onChange={(e) => setIdentity({ purpose: e.target.value })}
-            placeholder="Describe what this agent does..."
+            placeholder="e.g. You help me remember appointments and send reminders."
             className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#76b900] transition-colors resize-none"
           />
           <div className="flex justify-end">
