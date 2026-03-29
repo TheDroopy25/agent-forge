@@ -241,7 +241,7 @@ export default function VoiceDrawer({ open, onClose }: Props) {
                     You&apos;ll see a &ldquo;Select a plan&rdquo; screen. <strong className="text-[#76b900]">Do not click any plan.</strong> Look for the small <strong className="text-gray-300">&ldquo;Skip&rdquo;</strong> link at the bottom of the page — click that to stay on the free plan (10,000 characters/month, no credit card needed)
                   </li>
                   <li className="text-xs text-gray-400">
-                    Once inside, click your profile icon in the top-right corner → <strong className="text-gray-300">Profile</strong> → scroll down to find your <strong className="text-gray-300">API Key</strong> → copy it and paste it above
+                    Once inside, click your profile icon in the top-right corner → <strong className="text-gray-300">Settings</strong> → look for the <strong className="text-gray-300">API Keys</strong> section → copy your key and paste it above
                   </li>
                 </ol>
               </div>
