@@ -8,7 +8,6 @@ type SectionNodeData = {
   label: string;
   icon: string;
   section: string;
-  onClick: () => void;
 };
 
 // Determine status from store state for the given section key
@@ -104,7 +103,6 @@ export default function SectionNode({ data }: NodeProps & { data: SectionNodeDat
     <motion.div
       whileHover={{ scale: 1.05 }}
       transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-      onClick={data.onClick}
       style={{
         width: 120,
         height: 80,

@@ -86,7 +86,6 @@ function AgentCanvasInner() {
           label: section.label,
           icon: section.icon,
           section: section.id,
-          onClick: () => setActiveDrawer(section.id),
         },
       };
     });
@@ -125,6 +124,11 @@ function AgentCanvasInner() {
         zoomOnScroll={true}
         proOptions={{ hideAttribution: true }}
         style={{ background: '#0a0a0f' }}
+        onNodeClick={(_event, node) => {
+          if (node.id !== 'hub') {
+            setActiveDrawer(node.id as SectionId);
+          }
+        }}
       >
         <Background
           variant={BackgroundVariant.Dots}
