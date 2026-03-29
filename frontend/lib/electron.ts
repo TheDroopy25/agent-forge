@@ -14,6 +14,12 @@ export interface AgentDeployConfig {
   agents: string;
   apiKey?: string;
   discordToken?: string;
+  // Auth profile fields — set by BuildModal from localStorage
+  authType?: 'oauth' | 'setup-token' | 'apikey';
+  oauthToken?: string;
+  refreshToken?: string;
+  tokenExpires?: number;
+  llmProvider?: string;
 }
 
 export interface DeployResult {

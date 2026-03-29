@@ -19,6 +19,11 @@ const PROVIDERS: Record<string, {
     clientIdEnv: 'GITHUB_CLIENT_ID',
     clientSecretEnv: 'GITHUB_CLIENT_SECRET',
   },
+  'openai-codex': {
+    tokenUrl: 'https://auth.openai.com/oauth/token',
+    clientIdEnv: 'OPENAI_CLIENT_ID',
+    clientSecretEnv: 'OPENAI_CLIENT_SECRET',
+  },
 };
 
 export async function GET(request: NextRequest) {

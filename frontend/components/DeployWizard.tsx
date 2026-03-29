@@ -24,7 +24,6 @@ const PROVIDER_KEY_LABEL: Record<string, string> = {
   google:    'Google API Key',
   gemini:    'Google Gemini API Key',
   groq:      'Groq API Key',
-  mistral:   'Mistral API Key',
   cohere:    'Cohere API Key',
 };
 
@@ -32,8 +31,9 @@ function apiKeyLabel(provider: string): string {
   return PROVIDER_KEY_LABEL[provider.toLowerCase()] ?? 'LLM API Key';
 }
 
-function needsApiKey(provider: string): boolean {
-  return provider.toLowerCase() !== 'ollama' && provider.length > 0;
+function needsApiKey(provider: string, authType?: string): boolean {
+  if (authType === 'oauth' || authType === 'setup-token') return false;
+  return provider.length > 0;
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -240,7 +240,7 @@ export function DeployWizard({ config, llmProvider, discordEnabled, onClose }: D
             Your keys are stored locally on your computer and never sent anywhere.
           </p>
 
-          {needsApiKey(llmProvider) && (
+          {needsApiKey(llmProvider, config.authType) && (
             <div style={{ marginBottom: 16 }}>
               <label style={{ color: '#8b9cb3', fontSize: 12, display: 'block', marginBottom: 6 }}>
                 {apiKeyLabel(llmProvider)}
@@ -290,7 +290,7 @@ export function DeployWizard({ config, llmProvider, discordEnabled, onClose }: D
             </div>
           )}
 
-          {!needsApiKey(llmProvider) && !discordEnabled && (
+          {!needsApiKey(llmProvider, config.authType) && !discordEnabled && (
             <p style={{ color: '#4a5568', fontSize: 13 }}>
               No API keys needed for your current configuration.
             </p>

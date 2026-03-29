@@ -85,7 +85,7 @@ function registerHandlers(ipcMain, getWindow) {
     const win = getWindow();
     const send = (msg) => win?.webContents.send('deploy-progress', msg);
 
-    const { name, yaml, soul, agents, apiKey, discordToken } = config;
+    const { name, yaml, soul, agents, apiKey, discordToken, authType, oauthToken, refreshToken, tokenExpires, llmProvider } = config;
     const safeName = sanitizeName(name || 'my-agent');
     const workspaceDir = path.join(os.homedir(), 'openclaw-agents', safeName);
     const memoryDir = path.join(workspaceDir, 'memory');
@@ -105,9 +105,49 @@ function registerHandlers(ipcMain, getWindow) {
       send('Writing agent config... ⚙️');
       if (yaml) fs.writeFileSync(path.join(workspaceDir, 'agent.yaml'), yaml, 'utf8');
 
-      // Step 4 — API keys
+      // Step 4 — Credentials
+      send('Setting up credentials... 🔑');
+
+      // 4a — OAuth / setup-token → write auth-profiles.json
+      if (authType === 'oauth' && oauthToken) {
+        const agentDir = path.join(workspaceDir, 'agent');
+        fs.mkdirSync(agentDir, { recursive: true });
+        const oauthProvider = llmProvider === 'openai' ? 'openai-codex' : llmProvider;
+        const profiles = {
+          profiles: [{
+            id: `${oauthProvider}-default`,
+            provider: oauthProvider,
+            type: 'oauth',
+            access: oauthToken,
+            refresh: refreshToken || '',
+            expires: tokenExpires || 0,
+          }],
+        };
+        fs.writeFileSync(
+          path.join(agentDir, 'auth-profiles.json'),
+          JSON.stringify(profiles, null, 2),
+          'utf8'
+        );
+      } else if (authType === 'setup-token' && oauthToken) {
+        const agentDir = path.join(workspaceDir, 'agent');
+        fs.mkdirSync(agentDir, { recursive: true });
+        const profiles = {
+          profiles: [{
+            id: 'anthropic-default',
+            provider: 'anthropic',
+            type: 'setup_token',
+            token: oauthToken,
+          }],
+        };
+        fs.writeFileSync(
+          path.join(agentDir, 'auth-profiles.json'),
+          JSON.stringify(profiles, null, 2),
+          'utf8'
+        );
+      }
+
+      // 4b — API key / discord token → write to .conf env file
       if (apiKey || discordToken) {
-        send('Setting up your API keys... 🔑');
         const envDir = path.join(os.homedir(), '.config', 'environment.d');
         fs.mkdirSync(envDir, { recursive: true });
 

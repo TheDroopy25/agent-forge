@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { useAgentStore } from '@/store/agentStore';
 import { initiateOAuth, consumeOAuthRedirect, OAUTH_CONFIGS, type OAuthProvider } from '@/lib/oauth';
 
-type AuthMode = 'apikey' | 'oauth';
+type AuthMode = 'apikey' | 'oauth' | 'setup-token';
 
 interface Provider {
   id: string;
@@ -19,6 +19,8 @@ interface Provider {
   apiKeySteps?: string[];
   supportsOAuth?: boolean;
   oauthProvider?: OAuthProvider;
+  authType: 'oauth' | 'setup-token' | 'apikey';
+  setupTokenSteps?: string[];
 }
 
 const PROVIDERS: Provider[] = [
@@ -26,7 +28,11 @@ const PROVIDERS: Provider[] = [
     id: 'openai',
     name: 'OpenAI',
     icon: '🟢',
-    description: 'GPT-4o and beyond',
+    description: 'GPT-4o, o3, and more',
+    freeNote: '✅ Uses your ChatGPT Plus subscription ($20/mo) — no per-token billing',
+    supportsOAuth: true,
+    oauthProvider: 'openai-codex',
+    authType: 'oauth',
     apiKeyUrl: 'https://platform.openai.com/api-keys',
     apiKeySteps: [
       'Sign up at platform.openai.com',
@@ -38,12 +44,15 @@ const PROVIDERS: Provider[] = [
     id: 'anthropic',
     name: 'Anthropic',
     icon: '🟣',
-    description: 'Claude model family',
-    apiKeyUrl: 'https://console.anthropic.com/keys',
-    apiKeySteps: [
-      'Sign up at console.anthropic.com',
-      'Go to API Keys → Create Key',
-      'Paste it here — new accounts get $5 free credit',
+    description: 'Claude Sonnet, Opus, and more',
+    freeNote: '✅ Uses your Claude.ai subscription ($20/mo) — no per-token billing',
+    authType: 'setup-token',
+    setupTokenSteps: [
+      'Open a terminal on your computer',
+      'Run this command: claude setup-token',
+      'A browser window will open — sign in to your Claude.ai account',
+      'Copy the token that appears in your terminal',
+      'Paste it in the box below',
     ],
   },
   {
@@ -51,7 +60,7 @@ const PROVIDERS: Provider[] = [
     name: 'Google Gemini',
     icon: '🔵',
     description: 'Gemini model family',
-    freeNote: '✅ Free — 1,500 req/day on Gemini 2.0 Flash',
+    freeNote: '✅ Free — 1,500 requests/day on Gemini 2.0 Flash',
     apiKeyUrl: 'https://aistudio.google.com/app/apikey',
     apiKeySteps: [
       'Go to aistudio.google.com → Sign in with Google',
@@ -60,44 +69,21 @@ const PROVIDERS: Provider[] = [
     ],
     supportsOAuth: true,
     oauthProvider: 'google',
-  },
-  {
-    id: 'mistral',
-    name: 'Mistral',
-    icon: '🟠',
-    description: 'Open-weight models',
-    freeNote: '✅ Free tier available — Mistral Small & Codestral',
-    apiKeyUrl: 'https://console.mistral.ai/api-keys',
-    apiKeySteps: [
-      'Sign up at console.mistral.ai',
-      'Go to API Keys → Create new key',
-      'Free tier includes Mistral Small at no cost',
-    ],
-  },
-  {
-    id: 'ollama',
-    name: 'Ollama',
-    icon: '⚫',
-    description: 'Local model inference',
-    freeNote: '✅ Completely free — runs on your machine',
-    apiKeySteps: [
-      'Install from ollama.com/download',
-      'Run: ollama pull llama3.2',
-      'No API key needed — Ollama runs at localhost:11434',
-    ],
+    authType: 'oauth',
   },
   {
     id: 'nvidia',
     name: 'NVIDIA NIM',
     icon: '🟩',
     description: 'Accelerated inference',
-    freeNote: '✅ Free tier — 1,000 req/month on most models',
+    freeNote: '✅ Free tier — 1,000 req/month',
     apiKeyUrl: 'https://build.nvidia.com/explore/discover',
     apiKeySteps: [
       'Sign up at build.nvidia.com → NVIDIA account',
       'Browse models → click any → "Get API Key"',
       'Free tier: 1,000 requests/month per model',
     ],
+    authType: 'apikey',
   },
 ];
 
@@ -105,8 +91,6 @@ const MODELS: Record<string, string[]> = {
   openai:    ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo', 'o3-mini'],
   anthropic: ['claude-sonnet-4-6', 'claude-opus-4-6', 'claude-haiku-4-5'],
   google:    ['gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-2.5-pro'],
-  mistral:   ['mistral-large-latest', 'mistral-small-latest', 'codestral-latest', 'open-mixtral-8x7b'],
-  ollama:    ['llama3.2', 'llama3.1', 'mistral', 'codellama', 'phi3', 'gemma2', 'qwen2.5'],
   nvidia:    [
     'nvidia/llama-3.1-nemotron-70b-instruct',
     'meta/llama-3.1-405b-instruct',
@@ -132,6 +116,27 @@ const TEMP_DESCRIPTION =
   'Mid (0.5–1.0): balanced — good for most assistant work. ' +
   'High (1.2–2.0): more varied and creative, but can drift or hallucinate. Start at 0.7 and adjust.';
 
+// ── localStorage helpers ──────────────────────────────────────────────────────
+
+interface StoredAuth {
+  authType: string;
+  token: string;
+  refreshToken?: string;
+  expires?: number;
+}
+
+function saveAuthToStorage(providerId: string, data: StoredAuth) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(`agentforge_auth_${providerId}`, JSON.stringify(data));
+}
+
+function clearAuthFromStorage(providerId: string) {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(`agentforge_auth_${providerId}`);
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -142,21 +147,53 @@ export default function LLMDrawer({ open, onClose }: Props) {
   const setLLM = useAgentStore((s) => s.setLLM);
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
   const [oauthTokens, setOAuthTokens] = useState<Record<string, string>>({});
+  const [setupTokens, setSetupTokens] = useState<Record<string, string>>({});
   const [authModes, setAuthModes] = useState<Record<string, AuthMode>>({});
   const [oauthClientIds, setOAuthClientIds] = useState<Record<string, string>>({});
   const [setupOpen, setSetupOpen] = useState<string | null>(null);
+
+  // Load saved auth from localStorage on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    PROVIDERS.forEach((p) => {
+      const raw = localStorage.getItem(`agentforge_auth_${p.id}`);
+      if (!raw) return;
+      try {
+        const data: StoredAuth = JSON.parse(raw);
+        if (!data.token) return;
+        if (p.authType === 'oauth' && p.oauthProvider) {
+          setOAuthTokens((prev) => ({ ...prev, [p.oauthProvider!]: data.token }));
+        } else if (p.authType === 'setup-token') {
+          setSetupTokens((prev) => ({ ...prev, [p.id]: data.token }));
+        } else if (p.authType === 'apikey') {
+          setApiKeys((prev) => ({ ...prev, [p.id]: data.token }));
+        }
+      } catch {}
+    });
+  }, []);
 
   // Consume OAuth redirect on mount (user came back from provider)
   useEffect(() => {
     const result = consumeOAuthRedirect();
     if (result) {
       setOAuthTokens((prev) => ({ ...prev, [result.provider]: result.token }));
-      setSetupOpen(result.provider);
+      // Find the provider by oauthProvider name and open its panel
+      const providerInfo = PROVIDERS.find((p) => p.oauthProvider === result.provider);
+      if (providerInfo) {
+        saveAuthToStorage(providerInfo.id, { authType: 'oauth', token: result.token });
+        setSetupOpen(providerInfo.id);
+      }
     }
   }, []);
 
   const currentModels = MODELS[llm.provider] ?? [];
   const selectedProviderInfo = PROVIDERS.find((p) => p.id === llm.provider);
+
+  function getAuthMode(providerId: string): AuthMode {
+    if (authModes[providerId]) return authModes[providerId];
+    const p = PROVIDERS.find((x) => x.id === providerId);
+    return (p?.authType as AuthMode) ?? 'apikey';
+  }
 
   function handleProviderSelect(id: string) {
     const firstModel = MODELS[id]?.[0] ?? '';
@@ -180,7 +217,6 @@ export default function LLMDrawer({ open, onClose }: Props) {
             llm.fallbackChain[2] ?? { provider: '', model: '', trigger: 'rate_limit' },
           ];
     if (field === 'provider') {
-      // Reset model when provider changes
       chain[index] = { ...chain[index], provider: value, model: MODELS[value]?.[0] ?? '' };
     } else {
       chain[index] = { ...chain[index], [field]: value };
@@ -195,6 +231,335 @@ export default function LLMDrawer({ open, onClose }: Props) {
   ];
 
   const rowLabels = ['Primary', 'Fallback 1', 'Fallback 2'];
+
+  // ── Auth panel renderers ───────────────────────────────────────────────────
+
+  function renderOpenAIPanel(p: Provider) {
+    const mode = getAuthMode(p.id);
+    const oauthKey = p.oauthProvider!;
+    const connected = !!oauthTokens[oauthKey];
+
+    if (mode === 'apikey') {
+      return (
+        <div className="space-y-2">
+          <button
+            onClick={() => setAuthModes((prev) => ({ ...prev, [p.id]: 'oauth' }))}
+            className="text-xs text-gray-500 hover:text-gray-300 flex items-center gap-1"
+          >
+            ← Back to Sign in with ChatGPT
+          </button>
+          {p.apiKeySteps && (
+            <ol className="space-y-1">
+              {p.apiKeySteps.map((step, i) => (
+                <li key={i} className="text-xs text-gray-400 flex gap-2">
+                  <span className="text-[#76b900] font-bold shrink-0">{i + 1}.</span>
+                  {step}
+                </li>
+              ))}
+            </ol>
+          )}
+          <input
+            type="password"
+            placeholder="Paste your OpenAI API key"
+            value={apiKeys[p.id] ?? ''}
+            onChange={(e) => {
+              const val = e.target.value;
+              setApiKeys((prev) => ({ ...prev, [p.id]: val }));
+              if (val) saveAuthToStorage(p.id, { authType: 'apikey', token: val });
+              else clearAuthFromStorage(p.id);
+            }}
+            className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900] transition-colors"
+          />
+          {apiKeys[p.id] && <p className="text-xs text-[#76b900]">✓ Key saved</p>}
+          {p.apiKeyUrl && (
+            <a href={p.apiKeyUrl} target="_blank" rel="noreferrer" className="text-xs text-[#00d4ff] hover:underline">
+              → Get your API key at {p.apiKeyUrl.replace('https://', '')}
+            </a>
+          )}
+        </div>
+      );
+    }
+
+    // OAuth mode
+    return (
+      <div className="space-y-3">
+        {connected ? (
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-[#76b900]/10 border border-[#76b900]/30">
+            <span className="text-lg">✅</span>
+            <div>
+              <p className="text-sm font-medium text-[#76b900]">Connected to ChatGPT</p>
+              <p className="text-xs text-gray-400">OAuth token stored — your agent will use it automatically</p>
+            </div>
+            <button
+              onClick={() => {
+                setOAuthTokens((prev) => ({ ...prev, [oauthKey]: '' }));
+                clearAuthFromStorage(p.id);
+              }}
+              className="ml-auto text-xs text-gray-500 hover:text-red-400"
+            >
+              disconnect
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-xs text-gray-400 leading-relaxed">
+              Sign in with your ChatGPT account to authorize access. No API key needed — one click and you&apos;re done.
+            </p>
+            <button
+              onClick={async () => {
+                const config = OAUTH_CONFIGS['openai-codex'];
+                const clientId = process.env.NEXT_PUBLIC_OPENAI_CLIENT_ID || config.defaultClientId!;
+                const redirectUri = `${window.location.origin}/api/auth/callback`;
+                await initiateOAuth('openai-codex', clientId, redirectUri);
+              }}
+              className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg bg-[#10a37f] text-white font-medium text-sm hover:bg-[#0d8f6e] transition-colors"
+            >
+              <svg width="18" height="18" viewBox="0 0 41 41" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M37.532 16.87a9.963 9.963 0 0 0-.856-8.184 10.078 10.078 0 0 0-10.855-4.835 9.964 9.964 0 0 0-6.212-2.415 10.079 10.079 0 0 0-9.614 6.977 9.967 9.967 0 0 0-6.664 4.834 10.08 10.08 0 0 0 1.24 11.817 9.965 9.965 0 0 0 .856 8.185 10.079 10.079 0 0 0 10.855 4.835 9.965 9.965 0 0 0 6.212 2.414 10.079 10.079 0 0 0 9.617-6.981 9.967 9.967 0 0 0 6.663-4.834 10.079 10.079 0 0 0-1.243-11.813zM22.498 37.886a7.474 7.474 0 0 1-4.799-1.735c.061-.033.168-.091.237-.134l7.964-4.6a1.294 1.294 0 0 0 .655-1.134V19.054l3.366 1.944a.12.12 0 0 1 .066.092v9.299a7.505 7.505 0 0 1-7.49 7.496zM6.392 31.006a7.471 7.471 0 0 1-.894-5.023c.06.036.162.099.237.141l7.964 4.6a1.297 1.297 0 0 0 1.308 0l9.724-5.614v3.888a.12.12 0 0 1-.048.103l-8.051 4.649a7.504 7.504 0 0 1-10.24-2.744zM4.297 13.62A7.469 7.469 0 0 1 8.2 10.333c0 .068-.004.19-.004.274v9.201a1.294 1.294 0 0 0 .654 1.132l9.723 5.614-3.366 1.944a.12.12 0 0 1-.114.012L7.044 23.86a7.504 7.504 0 0 1-2.747-10.24zm27.658 6.437l-9.724-5.615 3.367-1.943a.121.121 0 0 1 .114-.012l8.048 4.648a7.498 7.498 0 0 1-1.158 13.528v-9.476a1.293 1.293 0 0 0-.647-1.13zm3.35-5.043c-.059-.037-.162-.099-.236-.141l-7.965-4.6a1.298 1.298 0 0 0-1.308 0l-9.723 5.614v-3.888a.12.12 0 0 1 .048-.103l8.05-4.645a7.497 7.497 0 0 1 11.135 7.763zm-21.063 6.929l-3.367-1.944a.12.12 0 0 1-.065-.092v-9.299a7.497 7.497 0 0 1 12.293-5.756 6.94 6.94 0 0 0-.236.134l-7.965 4.6a1.294 1.294 0 0 0-.654 1.132l-.006 11.225zm1.829-3.943l4.33-2.501 4.332 2.497v4.998l-4.331 2.5-4.331-2.5V18z" fill="currentColor"/>
+              </svg>
+              Sign in with ChatGPT
+            </button>
+            <button
+              onClick={() => setAuthModes((prev) => ({ ...prev, [p.id]: 'apikey' }))}
+              className="text-xs text-gray-500 hover:text-gray-300 underline w-full text-center"
+            >
+              I have an API key instead
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function renderAnthropicPanel(p: Provider) {
+    const token = setupTokens[p.id] ?? '';
+    const connected = !!token;
+
+    return (
+      <div className="space-y-3">
+        {connected ? (
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-[#76b900]/10 border border-[#76b900]/30">
+            <span className="text-lg">✅</span>
+            <div>
+              <p className="text-sm font-medium text-[#76b900]">Connected to Claude.ai</p>
+              <p className="text-xs text-gray-400">Setup token stored — your agent will use your subscription</p>
+            </div>
+            <button
+              onClick={() => {
+                setSetupTokens((prev) => ({ ...prev, [p.id]: '' }));
+                clearAuthFromStorage(p.id);
+              }}
+              className="ml-auto text-xs text-gray-500 hover:text-red-400"
+            >
+              disconnect
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm font-semibold text-white">Connect your Claude.ai subscription</p>
+            {p.setupTokenSteps && (
+              <ol className="space-y-1">
+                {p.setupTokenSteps.map((step, i) => (
+                  <li key={i} className="text-xs text-gray-400 flex gap-2">
+                    <span className="text-[#76b900] font-bold shrink-0">{i + 1}.</span>
+                    {step}
+                  </li>
+                ))}
+              </ol>
+            )}
+            <input
+              type="password"
+              placeholder="Paste your setup token here"
+              value={token}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSetupTokens((prev) => ({ ...prev, [p.id]: val }));
+                if (val) saveAuthToStorage(p.id, { authType: 'setup-token', token: val });
+                else clearAuthFromStorage(p.id);
+              }}
+              className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900] transition-colors"
+            />
+            <p className="text-xs text-yellow-500 leading-relaxed">
+              ⚠️ This uses your Claude.ai subscription. Make sure you have an active plan at claude.ai
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function renderGooglePanel(p: Provider) {
+    const oauthKey = p.oauthProvider!;
+    const connected = !!oauthTokens[oauthKey];
+    const mode = getAuthMode(p.id);
+
+    if (mode === 'apikey') {
+      return (
+        <div className="space-y-2">
+          <button
+            onClick={() => setAuthModes((prev) => ({ ...prev, [p.id]: 'oauth' }))}
+            className="text-xs text-gray-500 hover:text-gray-300 flex items-center gap-1"
+          >
+            ← Back to Sign in with Google
+          </button>
+          {p.apiKeySteps && (
+            <ol className="space-y-1">
+              {p.apiKeySteps.map((step, i) => (
+                <li key={i} className="text-xs text-gray-400 flex gap-2">
+                  <span className="text-[#76b900] font-bold shrink-0">{i + 1}.</span>
+                  {step}
+                </li>
+              ))}
+            </ol>
+          )}
+          <input
+            type="password"
+            placeholder="Paste your Google API key"
+            value={apiKeys[p.id] ?? ''}
+            onChange={(e) => {
+              const val = e.target.value;
+              setApiKeys((prev) => ({ ...prev, [p.id]: val }));
+              if (val) saveAuthToStorage(p.id, { authType: 'apikey', token: val });
+              else clearAuthFromStorage(p.id);
+            }}
+            className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900] transition-colors"
+          />
+          {apiKeys[p.id] && <p className="text-xs text-[#76b900]">✓ Key saved</p>}
+        </div>
+      );
+    }
+
+    // OAuth mode
+    return (
+      <div className="space-y-3">
+        {connected ? (
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-[#76b900]/10 border border-[#76b900]/30">
+            <span className="text-lg">✅</span>
+            <div>
+              <p className="text-sm font-medium text-[#76b900]">Connected to Google</p>
+              <p className="text-xs text-gray-400">OAuth token stored — your agent will use it automatically</p>
+            </div>
+            <button
+              onClick={() => {
+                setOAuthTokens((prev) => ({ ...prev, [oauthKey]: '' }));
+                clearAuthFromStorage(p.id);
+              }}
+              className="ml-auto text-xs text-gray-500 hover:text-red-400"
+            >
+              disconnect
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-xs text-gray-400 leading-relaxed">
+              Sign in with Google to authorize Gemini access. No API key needed — one click and you&apos;re done.
+            </p>
+            <button
+              onClick={async () => {
+                const sharedClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+                const clientId = sharedClientId || oauthClientIds['google'];
+                if (!clientId) {
+                  setAuthModes((prev) => ({ ...prev, [p.id]: 'apikey' }));
+                  return;
+                }
+                const redirectUri = `${window.location.origin}/api/auth/callback`;
+                await initiateOAuth('google', clientId, redirectUri);
+              }}
+              className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg bg-white text-gray-800 font-medium text-sm hover:bg-gray-100 transition-colors"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              Sign in with Google
+            </button>
+            {!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+              <details className="group">
+                <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-300 list-none flex items-center gap-1">
+                  <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
+                  Using your own Google Cloud project?
+                </summary>
+                <div className="mt-2 space-y-2">
+                  <ol className="space-y-1">
+                    {OAUTH_CONFIGS.google.setupSteps.map((step, i) => (
+                      <li key={i} className="text-xs text-gray-400 flex gap-2">
+                        <span className="text-[#76b900] font-bold shrink-0">{i + 1}.</span>
+                        {step}
+                      </li>
+                    ))}
+                  </ol>
+                  <input
+                    type="text"
+                    placeholder="Paste your Google Client ID"
+                    value={oauthClientIds['google'] ?? ''}
+                    onChange={(e) => setOAuthClientIds((prev) => ({ ...prev, google: e.target.value }))}
+                    className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900]"
+                  />
+                  <a href={OAUTH_CONFIGS.google.setupUrl} target="_blank" rel="noreferrer"
+                    className="text-xs text-[#00d4ff] hover:underline block">
+                    → Open Google Cloud Console
+                  </a>
+                </div>
+              </details>
+            )}
+            <button
+              onClick={() => setAuthModes((prev) => ({ ...prev, [p.id]: 'apikey' }))}
+              className="text-xs text-gray-500 hover:text-gray-300 underline w-full text-center"
+            >
+              I have an API key instead
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function renderNvidiaPanel(p: Provider) {
+    return (
+      <div className="space-y-2">
+        {p.apiKeySteps && (
+          <ol className="space-y-1">
+            {p.apiKeySteps.map((step, i) => (
+              <li key={i} className="text-xs text-gray-400 flex gap-2">
+                <span className="text-[#76b900] font-bold shrink-0">{i + 1}.</span>
+                {step}
+              </li>
+            ))}
+          </ol>
+        )}
+        <input
+          type="password"
+          placeholder="Paste your NVIDIA NIM API key"
+          value={apiKeys[p.id] ?? ''}
+          onChange={(e) => {
+            const val = e.target.value;
+            setApiKeys((prev) => ({ ...prev, [p.id]: val }));
+            if (val) saveAuthToStorage(p.id, { authType: 'apikey', token: val });
+            else clearAuthFromStorage(p.id);
+          }}
+          className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900] transition-colors"
+        />
+        {apiKeys[p.id] && <p className="text-xs text-[#76b900]">✓ Key saved</p>}
+        {p.apiKeyUrl && (
+          <a href={p.apiKeyUrl} target="_blank" rel="noreferrer" className="text-xs text-[#00d4ff] hover:underline">
+            → Get your API key at {p.apiKeyUrl.replace('https://', '')}
+          </a>
+        )}
+      </div>
+    );
+  }
+
+  function renderAuthPanel(p: Provider) {
+    switch (p.id) {
+      case 'openai':    return renderOpenAIPanel(p);
+      case 'anthropic': return renderAnthropicPanel(p);
+      case 'google':    return renderGooglePanel(p);
+      case 'nvidia':    return renderNvidiaPanel(p);
+      default:          return null;
+    }
+  }
 
   return (
     <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
@@ -224,16 +589,19 @@ export default function LLMDrawer({ open, onClose }: Props) {
                 <button
                   key={p.id}
                   onClick={() => handleProviderSelect(p.id)}
-                  className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
+                  className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-all ${
                     selected
                       ? 'border-[#76b900] bg-[#76b900]/10'
                       : 'border-[#1e2d3d] bg-[#1a1a2e] hover:border-[#76b900]/40'
                   }`}
                 >
-                  <span className="text-xl leading-none">{p.icon}</span>
+                  <span className="text-xl leading-none mt-0.5 shrink-0">{p.icon}</span>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{p.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{p.description}</p>
+                    <p className="text-sm font-medium text-white">{p.name}</p>
+                    <p className="text-xs text-gray-500">{p.description}</p>
+                    {p.freeNote && (
+                      <p className="text-xs text-[#76b900] mt-1 leading-tight">{p.freeNote}</p>
+                    )}
                   </div>
                 </button>
               );
@@ -251,158 +619,7 @@ export default function LLMDrawer({ open, onClose }: Props) {
               </button>
             </div>
 
-            {selectedProviderInfo.freeNote && (
-              <p className="text-xs text-[#76b900]">{selectedProviderInfo.freeNote}</p>
-            )}
-
-            {/* Auth mode toggle — only show for providers that support OAuth */}
-            {selectedProviderInfo.supportsOAuth && selectedProviderInfo.id !== 'ollama' && (
-              <div className="flex rounded-lg overflow-hidden border border-[#1e2d3d] text-xs font-medium">
-                {(['oauth', 'apikey'] as AuthMode[]).map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => setAuthModes((prev) => ({ ...prev, [selectedProviderInfo.id]: mode }))}
-                    className={`flex-1 py-2 transition-colors ${
-                      (authModes[selectedProviderInfo.id] ?? 'oauth') === mode
-                        ? 'bg-[#76b900] text-black font-semibold'
-                        : 'bg-[#1a1a2e] text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    {mode === 'oauth' ? '🔐 Connect with Google' : '🔑 API Key'}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* OAUTH mode */}
-            {selectedProviderInfo.supportsOAuth &&
-              (authModes[selectedProviderInfo.id] ?? 'oauth') === 'oauth' && (
-              <div className="space-y-3">
-                {oauthTokens[selectedProviderInfo.oauthProvider!] ? (
-                  // Already connected
-                  <div className="flex items-center gap-2 p-3 rounded-lg bg-[#76b900]/10 border border-[#76b900]/30">
-                    <span className="text-lg">✅</span>
-                    <div>
-                      <p className="text-sm font-medium text-[#76b900]">Connected to Google</p>
-                      <p className="text-xs text-gray-400">OAuth token stored — your agent will use it automatically</p>
-                    </div>
-                    <button
-                      onClick={() => setOAuthTokens((prev) => ({ ...prev, [selectedProviderInfo.oauthProvider!]: '' }))}
-                      className="ml-auto text-xs text-gray-500 hover:text-red-400"
-                    >
-                      disconnect
-                    </button>
-                  </div>
-                ) : (
-                  // Not yet connected
-                  <div className="space-y-3">
-                    <p className="text-xs text-gray-400 leading-relaxed">
-                      Sign in with Google to authorize Gemini access. No API key needed — one click and you&apos;re done.
-                    </p>
-
-                    {/* Option A: Use app's shared client ID (if env var is set on Vercel) */}
-                    <button
-                      onClick={async () => {
-                        const sharedClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-                        const clientId = sharedClientId || oauthClientIds['google'];
-                        if (!clientId) {
-                          // Show the manual setup section instead
-                          setAuthModes((prev) => ({ ...prev, [selectedProviderInfo.id]: 'oauth_manual' as AuthMode }));
-                          return;
-                        }
-                        const redirectUri = `${window.location.origin}/api/auth/callback`;
-                        await initiateOAuth('google', clientId, redirectUri);
-                      }}
-                      className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg bg-white text-gray-800 font-medium text-sm hover:bg-gray-100 transition-colors"
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                      </svg>
-                      Sign in with Google
-                    </button>
-
-                    {/* If no shared client ID is configured, show manual client ID input */}
-                    {!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
-                      <details className="group">
-                        <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-300 list-none flex items-center gap-1">
-                          <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
-                          Using your own Google Cloud project?
-                        </summary>
-                        <div className="mt-2 space-y-2">
-                          <ol className="space-y-1">
-                            {OAUTH_CONFIGS.google.setupSteps.map((step, i) => (
-                              <li key={i} className="text-xs text-gray-400 flex gap-2">
-                                <span className="text-[#76b900] font-bold shrink-0">{i + 1}.</span>
-                                {step}
-                              </li>
-                            ))}
-                          </ol>
-                          <input
-                            type="text"
-                            placeholder="Paste your Google Client ID"
-                            value={oauthClientIds['google'] ?? ''}
-                            onChange={(e) => setOAuthClientIds((prev) => ({ ...prev, google: e.target.value }))}
-                            className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900]"
-                          />
-                          <a href={OAUTH_CONFIGS.google.setupUrl} target="_blank" rel="noreferrer"
-                            className="text-xs text-[#00d4ff] hover:underline block">
-                            → Open Google Cloud Console
-                          </a>
-                        </div>
-                      </details>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* API KEY mode (or for providers that don't support OAuth) */}
-            {selectedProviderInfo.id !== 'ollama' &&
-              (!selectedProviderInfo.supportsOAuth || (authModes[selectedProviderInfo.id] ?? 'oauth') === 'apikey') && (
-              <div className="space-y-2">
-                {selectedProviderInfo.apiKeySteps && (
-                  <ol className="space-y-1">
-                    {selectedProviderInfo.apiKeySteps.map((step, i) => (
-                      <li key={i} className="text-xs text-gray-400 flex gap-2">
-                        <span className="text-[#76b900] font-bold shrink-0">{i + 1}.</span>
-                        {step}
-                      </li>
-                    ))}
-                  </ol>
-                )}
-                <input
-                  type="password"
-                  placeholder={`Paste your ${selectedProviderInfo.name} API key`}
-                  value={apiKeys[selectedProviderInfo.id] ?? ''}
-                  onChange={(e) => setApiKeys((prev) => ({ ...prev, [selectedProviderInfo.id]: e.target.value }))}
-                  className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900] transition-colors"
-                />
-                {apiKeys[selectedProviderInfo.id] && (
-                  <p className="text-xs text-[#76b900]">✓ Key saved</p>
-                )}
-                {selectedProviderInfo.apiKeyUrl && (
-                  <a href={selectedProviderInfo.apiKeyUrl} target="_blank" rel="noreferrer"
-                    className="text-xs text-[#00d4ff] hover:underline">
-                    → Get your API key at {selectedProviderInfo.apiKeyUrl.replace('https://', '')}
-                  </a>
-                )}
-              </div>
-            )}
-
-            {/* Ollama — no auth needed */}
-            {selectedProviderInfo.id === 'ollama' && (
-              <div className="space-y-1">
-                {selectedProviderInfo.apiKeySteps?.map((step, i) => (
-                  <p key={i} className="text-xs text-gray-400 flex gap-2">
-                    <span className="text-[#76b900] font-bold shrink-0">{i + 1}.</span>
-                    {step}
-                  </p>
-                ))}
-              </div>
-            )}
+            {renderAuthPanel(selectedProviderInfo)}
           </div>
         )}
 
@@ -427,7 +644,6 @@ export default function LLMDrawer({ open, onClose }: Props) {
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-gray-300">Temperature</label>
-              {/* Tooltip trigger */}
               <div className="group relative">
                 <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
                 <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
@@ -449,7 +665,6 @@ export default function LLMDrawer({ open, onClose }: Props) {
             <span className="text-xs text-gray-500">Deterministic</span>
             <span className="text-xs text-gray-500">Creative</span>
           </div>
-          {/* Contextual hint based on current value */}
           <p className="text-xs text-gray-600 italic">
             {llm.temperature <= 0.3
               ? 'Very predictable — best for data tasks and coding'
@@ -482,7 +697,6 @@ export default function LLMDrawer({ open, onClose }: Props) {
               <div key={i} className="space-y-1">
                 <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{rowLabels[i]}</span>
                 <div className="grid grid-cols-3 gap-2">
-                  {/* Provider dropdown */}
                   <select
                     value={row.provider}
                     onChange={(e) => handleFallbackChange(i, 'provider', e.target.value)}
@@ -494,7 +708,6 @@ export default function LLMDrawer({ open, onClose }: Props) {
                     ))}
                   </select>
 
-                  {/* Model dropdown — populates based on provider */}
                   <select
                     value={row.model}
                     onChange={(e) => handleFallbackChange(i, 'model', e.target.value)}
@@ -507,7 +720,6 @@ export default function LLMDrawer({ open, onClose }: Props) {
                     ))}
                   </select>
 
-                  {/* Trigger dropdown */}
                   <select
                     value={row.trigger}
                     onChange={(e) => handleFallbackChange(i, 'trigger', e.target.value)}

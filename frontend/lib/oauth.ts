@@ -2,12 +2,15 @@
 // The callback route handles code exchange if env vars are set; otherwise falls back
 // to letting the user paste their own client ID for a bring-your-own-credentials flow.
 
-export type OAuthProvider = 'google' | 'github';
+export type OAuthProvider = 'google' | 'github' | 'openai-codex';
 
 interface OAuthConfig {
   authUrl: string;
   scopes: string[];
   clientIdEnvHint: string; // shown in UI if env var not set
+  defaultClientId?: string; // public shared client ID (no user setup needed)
+  callbackPort?: number;
+  tokenUrl?: string;
   setupUrl: string;
   setupSteps: string[];
   freeNote?: string;
@@ -43,6 +46,18 @@ export const OAUTH_CONFIGS: Record<OAuthProvider, OAuthConfig> = {
       'Set callback URL to your app URL + /api/auth/callback',
       'Copy the Client ID below',
     ],
+  },
+  'openai-codex': {
+    authUrl: 'https://auth.openai.com/oauth/authorize',
+    scopes: ['openid', 'profile', 'email', 'offline_access'],
+    clientIdEnvHint: 'OPENAI_CLIENT_ID',
+    // OpenAI Codex client_id from OpenClaw (public, same one openclaw CLI uses):
+    defaultClientId: 'app-20250116BKOlVN3C-openai-codex',
+    callbackPort: 1455,
+    tokenUrl: 'https://auth.openai.com/oauth/token',
+    setupUrl: 'https://platform.openai.com',
+    setupSteps: [],
+    freeNote: '✅ Uses your ChatGPT subscription — no per-token billing',
   },
 };
 

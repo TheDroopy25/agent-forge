@@ -280,21 +280,45 @@ export function BuildModal({ open, onClose }: BuildModalProps) {
           )}
 
           {/* Phase 2a: Deploy wizard (Electron only) */}
-          {buildComplete && showWizard && (
-            <div className="px-6 py-4">
-              <DeployWizard
-                config={{
-                  name:   agentState.identity.name,
-                  yaml:   generateOpenClawYAML(agentState),
-                  soul:   generateSOUL(agentState),
-                  agents: generateAGENTS(agentState),
-                }}
-                llmProvider={agentState.llm.provider}
-                discordEnabled={agentState.channels.discord.enabled}
-                onClose={onClose}
-              />
-            </div>
-          )}
+          {buildComplete && showWizard && (() => {
+            const llmProvider = agentState.llm.provider;
+            let authType: 'oauth' | 'setup-token' | 'apikey' | undefined;
+            let oauthToken: string | undefined;
+            let refreshToken: string | undefined;
+            let tokenExpires: number | undefined;
+            try {
+              const raw = typeof window !== 'undefined'
+                ? localStorage.getItem(`agentforge_auth_${llmProvider}`)
+                : null;
+              if (raw) {
+                const stored = JSON.parse(raw);
+                authType = stored.authType;
+                oauthToken = stored.token;
+                refreshToken = stored.refreshToken;
+                tokenExpires = stored.expires;
+              }
+            } catch {}
+            return (
+              <div className="px-6 py-4">
+                <DeployWizard
+                  config={{
+                    name:   agentState.identity.name,
+                    yaml:   generateOpenClawYAML(agentState),
+                    soul:   generateSOUL(agentState),
+                    agents: generateAGENTS(agentState),
+                    llmProvider,
+                    authType,
+                    oauthToken,
+                    refreshToken,
+                    tokenExpires,
+                  }}
+                  llmProvider={llmProvider}
+                  discordEnabled={agentState.channels.discord.enabled}
+                  onClose={onClose}
+                />
+              </div>
+            );
+          })()}
 
           {/* Phase 2b: Output tabs (web or pre-deploy in Electron) */}
           {buildComplete && !showWizard && (
