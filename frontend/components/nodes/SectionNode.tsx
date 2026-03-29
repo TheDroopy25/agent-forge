@@ -136,6 +136,22 @@ export default function SectionNode({ data }: NodeProps & { data: SectionNodeDat
     : 'none';
 
   return (
+    <div style={{ position: 'relative' }}>
+      {/* Pulse ring — only on the active next step */}
+      {isNextStep && (
+        <motion.div
+          animate={{ scale: [1, 1.18, 1], opacity: [0.6, 0.2, 0.6] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+          style={{
+            position: 'absolute',
+            inset: -6,
+            borderRadius: 16,
+            border: '2px solid rgba(0, 212, 255, 0.6)',
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
+      )}
     <motion.div
       whileHover={{ scale: 1.05 }}
       transition={{ type: 'spring', stiffness: 400, damping: 20 }}
@@ -143,7 +159,7 @@ export default function SectionNode({ data }: NodeProps & { data: SectionNodeDat
         width: 120,
         height: 80,
         background: '#12121a',
-        border: `1.5px solid ${borderColor}`,
+        border: isComplete ? '2px solid #76b900' : `1.5px solid ${borderColor}`,
         borderRadius: 12,
         boxShadow,
         display: 'flex',
@@ -153,6 +169,7 @@ export default function SectionNode({ data }: NodeProps & { data: SectionNodeDat
         cursor: 'pointer',
         position: 'relative',
         userSelect: 'none',
+        zIndex: 1,
       }}
     >
       {/* Step number badge — top-left */}
@@ -220,5 +237,6 @@ export default function SectionNode({ data }: NodeProps & { data: SectionNodeDat
         style={{ opacity: 0, pointerEvents: 'none' }}
       />
     </motion.div>
+    </div>
   );
 }

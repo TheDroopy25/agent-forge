@@ -39,18 +39,20 @@ export default function HubNode({ data }: NodeProps & { data: HubNodeData }) {
         </motion.div>
       )}
 
-      {/* Animated pulse ring */}
-      <motion.div
-        animate={{ scale: [1, 1.15, 1] }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          borderRadius: '50%',
-          border: '2px solid rgba(118, 185, 0, 0.45)',
-          pointerEvents: 'none',
-        }}
-      />
+      {/* Pulse ring — only when no name (hub is the active step) */}
+      {!hasName && (
+        <motion.div
+          animate={{ scale: [1, 1.15, 1], opacity: [0.6, 0.2, 0.6] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+          style={{
+            position: 'absolute',
+            inset: -6,
+            borderRadius: '50%',
+            border: '2px solid rgba(0, 212, 255, 0.6)',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
 
       {/* Main circle */}
       <div
