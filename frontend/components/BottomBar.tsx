@@ -26,6 +26,25 @@ function toStoreKey(section: string): string {
   return SECTION_KEY_MAP[section] ?? section;
 }
 
+const SECTION_LABELS: Record<string, string> = {
+  identity: 'Identity',
+  llm: 'LLM',
+  voice: 'Voice',
+  memory: 'Memory',
+  data: 'Data',
+  tools: 'Tools',
+  skills: 'Skills',
+  subagents: 'Sub-Agents',
+  channels: 'Channels',
+  guardrails: 'Guardrails',
+  observability: 'Observability',
+};
+
+const STEP_NUMBERS: Record<string, number> = {
+  identity: 1, llm: 2, voice: 3, memory: 4, data: 5, tools: 6,
+  skills: 7, subagents: 8, channels: 9, guardrails: 10, observability: 11,
+};
+
 interface BottomBarProps {
   onBuildClick: () => void;
 }
@@ -33,10 +52,13 @@ interface BottomBarProps {
 export function BottomBar({ onBuildClick }: BottomBarProps) {
   const completedCount = useAgentStore((s) => s.completedCount);
   const sectionComplete = useAgentStore((s) => s.sectionComplete);
+  const nextStep = useAgentStore((s) => s.nextStep);
+  const agentNamed = useAgentStore((s) => s.agentNamed);
 
   const identityDone = sectionComplete['identity'] ?? false;
   const llmDone = sectionComplete['llm'] ?? false;
   const canBuild = identityDone && llmDone;
+  const allComplete = completedCount === 11;
 
   return (
     <div
@@ -55,28 +77,41 @@ export function BottomBar({ onBuildClick }: BottomBarProps) {
         AgentForge
       </span>
 
-      {/* Center: progress */}
+      {/* Center: progress or hint */}
       <div className="flex flex-col items-center gap-1">
-        <span className="text-xs" style={{ color: '#8b9cb3' }}>
-          {completedCount} of 11 sections configured
-        </span>
-        <div className="flex items-center gap-[3px]">
-          {SECTIONS.map((section) => {
-            const done = sectionComplete[toStoreKey(section)] ?? false;
-            return (
-              <div
-                key={section}
-                style={{
-                  width: '18px',
-                  height: '6px',
-                  borderRadius: '3px',
-                  background: done ? '#76b900' : '#1e2d3d',
-                  transition: 'background 0.3s ease',
-                }}
-              />
-            );
-          })}
-        </div>
+        {!agentNamed ? (
+          <span className="text-xs" style={{ color: '#8b9cb3' }}>
+            👆 Start by naming your agent in the center
+          </span>
+        ) : (
+          <>
+            <span className="text-xs" style={{ color: '#8b9cb3' }}>
+              {allComplete ? '✅ Ready to build!' : `${completedCount} of 11 sections configured`}
+            </span>
+            <div className="flex items-center gap-[3px]">
+              {SECTIONS.map((section) => {
+                const done = sectionComplete[toStoreKey(section)] ?? false;
+                return (
+                  <div
+                    key={section}
+                    style={{
+                      width: '18px',
+                      height: '6px',
+                      borderRadius: '3px',
+                      background: done ? '#76b900' : '#1e2d3d',
+                      transition: 'background 0.3s ease',
+                    }}
+                  />
+                );
+              })}
+            </div>
+            {!allComplete && nextStep && (
+              <span className="text-xs" style={{ color: '#00d4ff' }}>
+                Next: {STEP_NUMBERS[nextStep]}. {SECTION_LABELS[nextStep]} →
+              </span>
+            )}
+          </>
+        )}
       </div>
 
       {/* Right: build button */}

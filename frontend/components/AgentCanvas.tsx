@@ -68,7 +68,7 @@ function AgentCanvasInner() {
       id: 'hub',
       type: 'hub',
       position: { x: 0, y: 0 },
-      data: { label: 'YOUR AGENT' },
+      data: { label: '' },
       // Offset so the hub circle is visually centered at origin
       style: { transform: `translate(${HUB_OFFSET_X}px, ${HUB_OFFSET_Y}px)` },
     };

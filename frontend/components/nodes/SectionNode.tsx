@@ -15,7 +15,8 @@ function useSectionStatus(section: string): 'complete' | 'inProgress' | 'notStar
   const sectionComplete = useAgentStore((s) => s.sectionComplete);
   const state = useAgentStore((s) => s);
 
-  if (sectionComplete[section]) return 'complete';
+  const storeKey = section === 'subagents' ? 'subAgents' : section;
+  if (sectionComplete[storeKey]) return 'complete';
 
   // Detect "in progress" — any non-default value set
   switch (section) {
@@ -81,7 +82,12 @@ function useSectionStatus(section: string): 'complete' | 'inProgress' | 'notStar
         return 'inProgress';
       break;
     case 'observability':
-      if (state.observability.logLevel !== 'silent') return 'inProgress';
+      if (
+        state.observability.heartbeatInterval !== 'disabled' ||
+        state.observability.discordAlertChannel.length > 0 ||
+        state.observability.dailySummary === true
+      )
+        return 'inProgress';
       break;
   }
 
@@ -94,10 +100,40 @@ const STATUS_COLORS: Record<string, string> = {
   notStarted: '#4a5568',
 };
 
+const STEP_NUMBERS: Record<string, number> = {
+  identity: 1,
+  llm: 2,
+  voice: 3,
+  memory: 4,
+  data: 5,
+  tools: 6,
+  skills: 7,
+  subagents: 8,
+  channels: 9,
+  guardrails: 10,
+  observability: 11,
+};
+
 export default function SectionNode({ data }: NodeProps & { data: SectionNodeData }) {
   const sectionComplete = useAgentStore((s) => s.sectionComplete);
+  const nextStep = useAgentStore((s) => s.nextStep);
   const status = useSectionStatus(data.section);
-  const isComplete = sectionComplete[data.section] ?? false;
+  const storeKey = data.section === 'subagents' ? 'subAgents' : data.section;
+  const isComplete = sectionComplete[storeKey] ?? false;
+  const isNextStep = nextStep === data.section && !isComplete;
+  const stepNumber = STEP_NUMBERS[data.section];
+
+  const borderColor = isComplete
+    ? '#76b900'
+    : isNextStep
+    ? '#00d4ff'
+    : '#1e2d3d';
+
+  const boxShadow = isComplete
+    ? '0 0 15px rgba(118,185,0,0.35)'
+    : isNextStep
+    ? '0 0 15px rgba(0,212,255,0.35)'
+    : 'none';
 
   return (
     <motion.div
@@ -107,11 +143,9 @@ export default function SectionNode({ data }: NodeProps & { data: SectionNodeDat
         width: 120,
         height: 80,
         background: '#12121a',
-        border: isComplete ? '1.5px solid #76b900' : '1.5px solid #1e2d3d',
+        border: `1.5px solid ${borderColor}`,
         borderRadius: 12,
-        boxShadow: isComplete
-          ? '0 0 15px rgba(118,185,0,0.35)'
-          : 'none',
+        boxShadow,
         display: 'flex',
         alignItems: 'center',
         gap: 10,
@@ -121,6 +155,28 @@ export default function SectionNode({ data }: NodeProps & { data: SectionNodeDat
         userSelect: 'none',
       }}
     >
+      {/* Step number badge — top-left */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 5,
+          left: 6,
+          background: isNextStep ? '#00d4ff' : '#1e2d3d',
+          color: isNextStep ? '#000' : '#6b7a8d',
+          fontSize: 8,
+          fontWeight: 700,
+          width: 14,
+          height: 14,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          lineHeight: 1,
+        }}
+      >
+        {stepNumber}
+      </div>
+
       {/* Status dot */}
       <div
         style={{

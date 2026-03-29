@@ -128,6 +128,8 @@ export interface AgentState {
 
   // Computed
   completedCount: number;
+  nextStep: string | null;
+  agentNamed: boolean;
 
   // Actions
   setIdentity: (data: Partial<AgentState['identity']>) => void;
@@ -193,7 +195,7 @@ function computeSectionComplete(state: Omit<AgentState, 'sectionComplete' | 'com
   return {
     identity: identity.name.length > 0 && identity.purpose.length > 0,
     llm: llm.provider.length > 0 && llm.model.length > 0,
-    voice: true,
+    voice: voice.enabled === true,
     memory: anyMemoryEnabled,
     data: data.files.length > 0 || data.urls.length > 0 || data.apiConnections.length > 0,
     tools: anyToolEnabled,
@@ -201,7 +203,10 @@ function computeSectionComplete(state: Omit<AgentState, 'sectionComplete' | 'com
     subAgents: subAgents.agents.length > 0,
     channels: anyChannelEnabled,
     guardrails: guardrails.neverDo.length > 0 || guardrails.alwaysAsk.length > 0,
-    observability: observability.logLevel !== 'silent',
+    observability:
+      observability.heartbeatInterval !== 'disabled' ||
+      observability.discordAlertChannel.length > 0 ||
+      observability.dailySummary === true,
   };
 }
 
@@ -328,9 +333,21 @@ const defaultObservability: AgentState['observability'] = {
   contextCompression: true,
 };
 
+// ─── Clockwise step order (uses section node IDs) ────────────────────────────
+
+const STEP_ORDER = [
+  'identity', 'llm', 'voice', 'memory', 'data', 'tools',
+  'skills', 'subagents', 'channels', 'guardrails', 'observability',
+] as const;
+
+// Map section node IDs to sectionComplete keys where they differ
+const SECTION_TO_STORE_KEY: Record<string, string> = {
+  subagents: 'subAgents',
+};
+
 // ─── Helper: recompute derived fields after any mutation ──────────────────────
 
-function withDerived(state: Partial<AgentState>): Pick<AgentState, 'sectionComplete' | 'completedCount'> {
+function withDerived(state: Partial<AgentState>): Pick<AgentState, 'sectionComplete' | 'completedCount' | 'nextStep' | 'agentNamed'> {
   const sectionComplete = computeSectionComplete({
     identity: (state.identity ?? defaultIdentity),
     llm: (state.llm ?? defaultLLM),
@@ -347,7 +364,14 @@ function withDerived(state: Partial<AgentState>): Pick<AgentState, 'sectionCompl
 
   const completedCount = Object.values(sectionComplete).filter(Boolean).length;
 
-  return { sectionComplete, completedCount };
+  const nextStep = STEP_ORDER.find(
+    (key) => !sectionComplete[SECTION_TO_STORE_KEY[key] ?? key]
+  ) ?? null;
+
+  const identity = state.identity ?? defaultIdentity;
+  const agentNamed = identity.name.length > 0;
+
+  return { sectionComplete, completedCount, nextStep, agentNamed };
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────

@@ -2,14 +2,42 @@
 
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { motion } from 'framer-motion';
+import { useAgentStore } from '@/store/agentStore';
 
 type HubNodeData = {
   label: string;
 };
 
 export default function HubNode({ data }: NodeProps & { data: HubNodeData }) {
+  const name = useAgentStore((s) => s.identity.name);
+  const setIdentity = useAgentStore((s) => s.setIdentity);
+
+  const hasName = name.length > 0;
+
   return (
     <div style={{ position: 'relative', width: 160, height: 160 }}>
+      {/* "Start here" prompt — shown only when no name */}
+      {!hasName && (
+        <motion.div
+          animate={{ y: [0, -4, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+          style={{
+            position: 'absolute',
+            top: -28,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            whiteSpace: 'nowrap',
+            color: '#76b900',
+            fontSize: 12,
+            fontWeight: 600,
+            letterSpacing: '0.04em',
+            pointerEvents: 'none',
+          }}
+        >
+          👆 Start here
+        </motion.div>
+      )}
+
       {/* Animated pulse ring */}
       <motion.div
         animate={{ scale: [1, 1.15, 1] }}
@@ -36,24 +64,38 @@ export default function HubNode({ data }: NodeProps & { data: HubNodeData }) {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 4,
+          gap: 6,
+          padding: '0 16px',
         }}
       >
-        {/* Robot emoji */}
-        <span style={{ fontSize: 48, lineHeight: 1 }}>🤖</span>
+        {/* Robot emoji — shrinks when name present */}
+        <span style={{ fontSize: hasName ? 28 : 36, lineHeight: 1 }}>🤖</span>
 
-        {/* Label */}
-        <span
+        {/* Name input */}
+        <input
+          value={name}
+          onChange={(e) => setIdentity({ name: e.target.value })}
+          placeholder="Name your agent..."
+          className="nodrag"
           style={{
-            color: '#76b900',
-            fontWeight: 700,
-            fontSize: 11,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
+            background: 'transparent',
+            border: 'none',
+            borderBottom: hasName ? 'none' : '1px solid rgba(118,185,0,0.4)',
+            outline: 'none',
+            color: hasName ? '#76b900' : '#ffffff',
+            fontSize: hasName ? 14 : 12,
+            fontWeight: hasName ? 700 : 400,
+            textAlign: 'center',
+            width: '100%',
+            padding: '2px 0',
+            letterSpacing: hasName ? '0.04em' : '0',
           }}
-        >
-          YOUR AGENT
-        </span>
+        />
+
+        {/* Checkmark — shown when named */}
+        {hasName && (
+          <span style={{ fontSize: 14, lineHeight: 1 }}>✅</span>
+        )}
 
         {/* Hub badge */}
         <span
