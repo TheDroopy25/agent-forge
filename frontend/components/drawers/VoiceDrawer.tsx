@@ -17,23 +17,17 @@ interface VoiceProvider {
 
 const VOICE_PROVIDERS: VoiceProvider[] = [
   { id: 'elevenlabs', name: 'ElevenLabs', description: 'Most realistic voices — requires a free account', color: '#f59e0b' },
-  { id: 'azure',      name: 'Azure TTS',  description: 'Microsoft voices — requires Azure account',       color: '#0078d4' },
-  { id: 'openai',     name: 'OpenAI TTS', description: 'Clean voices — requires OpenAI account',          color: '#10a37f' },
-  { id: 'kokoro',     name: 'Kokoro',     description: 'Free voices — no account, runs on your computer', color: '#8b5cf6', badge: 'FREE • No account needed', recommend: true },
+  { id: 'openai',     name: 'OpenAI TTS', description: 'Clean, natural voices — requires OpenAI account', color: '#10a37f' },
 ];
 
 const PROVIDER_TOOLTIPS: Record<string, string> = {
-  elevenlabs: 'Highest quality voices — most natural, expressive, and human-sounding. Latency: ~500ms. Cost: ~$0.30/1000 chars (free tier: 10K chars/month). Best for production voice agents.',
-  azure: 'Microsoft neural voices. Very high quality, slightly lower than ElevenLabs. Latency: ~300ms. Cost: ~$16/1M chars (free tier: 500K chars/month). Good balance of quality and cost.',
-  openai: '6 built-in voices. Good quality, simple setup. Latency: ~400ms. Cost: ~$15/1M chars. Best if you are already using OpenAI for LLM — one API key.',
-  kokoro: 'Runs entirely on your machine — zero cost, zero latency added by API calls. Requires ~500MB disk. Quality is good but not as natural as cloud options. Best for privacy or offline use.',
+  elevenlabs: 'Highest quality voices — most natural, expressive, and human-sounding. Free tier includes 10,000 characters per month. Best for production voice agents.',
+  openai: '6 built-in voices. Good quality, simple setup. Best if you\'re already using OpenAI for your agent\'s brain — one API key covers both.',
 };
 
 const VOICES: Record<string, string[]> = {
   elevenlabs: ['Rachel', 'Domi', 'Bella', 'Josh', 'Adam'],
   openai:     ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'],
-  azure:      ['GuyNeural', 'JennyNeural'],
-  kokoro:     ['af_heart', 'am_adam'],
 };
 
 const ELEVENLABS_VOICE_IDS: Record<string, string> = {
@@ -243,30 +237,6 @@ export default function VoiceDrawer({ open, onClose }: Props) {
             </div>
           )}
 
-          {voice.provider === 'azure' && (
-            <div className="space-y-2 rounded-lg border border-[#1e2d3d] bg-[#0d1929] p-4">
-              <p className="text-sm font-medium text-white">Azure Speech API Key</p>
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Paste your API key here"
-                className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900] transition-colors"
-              />
-              <p className="text-xs text-gray-500">
-                Get your key from the Azure portal under &quot;Speech Services&quot;. Free tier includes 500,000 characters per month.
-              </p>
-              <a
-                href="https://azure.microsoft.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-[#76b900] hover:underline"
-              >
-                Get an Azure Speech key →
-              </a>
-            </div>
-          )}
-
           {voice.provider === 'openai' && (
             <div className="space-y-2 rounded-lg border border-[#1e2d3d] bg-[#0d1929] p-4">
               <p className="text-sm font-medium text-white">OpenAI API Key</p>
@@ -291,14 +261,6 @@ export default function VoiceDrawer({ open, onClose }: Props) {
             </div>
           )}
 
-          {voice.provider === 'kokoro' && (
-            <div className="rounded-lg border p-4" style={{ background: '#052e16', borderColor: '#166534' }}>
-              <p className="text-sm text-green-400">
-                ✅ No API key needed. Kokoro runs locally on your computer — completely free, completely private.
-              </p>
-            </div>
-          )}
-
           {/* Voice Picker */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -318,14 +280,10 @@ export default function VoiceDrawer({ open, onClose }: Props) {
 
           {/* Preview Button */}
           {(() => {
-            const isKokoro = voice.provider === 'kokoro';
-            const isAzure = voice.provider === 'azure';
-            const hasKey = apiKey.trim().length > 0;
-            const canPreview = !isKokoro && !isAzure && hasKey;
+                        const hasKey = apiKey.trim().length > 0;
+            const canPreview = hasKey;
             let statusMsg = '';
-            if (isKokoro) statusMsg = 'Kokoro runs locally — preview available after deploying your agent.';
-            else if (isAzure) statusMsg = 'Azure preview requires your agent to be running locally. Deploy first, then test your voice.';
-            else if (!hasKey) statusMsg = 'Enter your API key above to preview';
+            if (!hasKey) statusMsg = 'Enter your API key above to preview';
             return (
               <div className="space-y-2">
                 <button
