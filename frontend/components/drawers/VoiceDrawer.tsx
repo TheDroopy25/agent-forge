@@ -241,7 +241,9 @@ export default function VoiceDrawer({ open, onClose }: Props) {
                     You&apos;ll see a &ldquo;Select a plan&rdquo; screen. <strong className="text-[#76b900]">Do not click any plan.</strong> Look for the small <strong className="text-gray-300">&ldquo;Skip&rdquo;</strong> link at the bottom of the page — click that to stay on the free plan (10,000 characters/month, no credit card needed)
                   </li>
                   <li className="text-xs text-gray-400">
-                    Once you&apos;re signed in, go directly to your API key page: <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener noreferrer" className="text-[#76b900] hover:underline">elevenlabs.io/app/settings/api-keys</a> — copy your key and paste it above
+                    Once you&apos;re signed in and on your dashboard, <strong className="text-gray-300">click this link to go straight to your API key:</strong>{' '}
+                    <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener noreferrer" className="text-[#76b900] hover:underline">Get my ElevenLabs API key →</a>
+                    {' '}— copy it and paste it above
                   </li>
                 </ol>
               </div>
