@@ -106,19 +106,16 @@ export default function IdentityDrawer({ open, onClose }: Props) {
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-gray-300">Purpose</label>
-            <Tip text="This goes directly into your agent's personality file — it tells the agent who it is and what its job is. The more specific you are, the better it behaves. Examples: 'You help me remember appointments and send reminders.' / 'You answer questions about my small business inventory.' / 'You check my email and summarize anything important.'" />
+            <Tip text="This goes directly into your agent's personality file — it shapes how the agent thinks and behaves. Write as much or as little as you like. A single sentence works great. More detail just makes it smarter about your specific situation. Examples: 'You help me remember appointments and send reminders.' / 'You answer questions about my small business inventory.' / 'You check my email and summarize anything important. You know I prefer short answers and hate jargon.'" />
           </div>
           <textarea
             rows={4}
-            maxLength={160}
             value={identity.purpose}
             onChange={(e) => setIdentity({ purpose: e.target.value })}
             placeholder="e.g. You help me remember appointments and send reminders."
             className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#76b900] transition-colors resize-none"
           />
-          <div className="flex justify-end">
-            <span className="text-xs text-gray-500">{identity.purpose.length}/160</span>
-          </div>
+          <p className="text-xs text-gray-500">One sentence or a whole paragraph — whatever feels right. More detail = smarter agent.</p>
         </div>
 
         {/* Personality Sliders */}
