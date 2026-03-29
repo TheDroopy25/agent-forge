@@ -285,26 +285,32 @@ export default function VoiceDrawer({ open, onClose }: Props) {
           )}
 
           {voice.provider === 'openai' && (
-            <div className="space-y-2 rounded-lg border border-[#1e2d3d] bg-[#0d1929] p-4">
+            <div className="space-y-3 rounded-lg border border-[#1e2d3d] bg-[#0d1929] p-4">
               <p className="text-sm font-medium text-white">OpenAI API Key</p>
               <input
                 type="password"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Paste your API key here"
+                placeholder="sk-proj-..."
                 className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900] transition-colors"
               />
-              <p className="text-xs text-gray-500">
-                Same key you use for the ChatGPT API. Get one at platform.openai.com.
-              </p>
-              <a
-                href="https://platform.openai.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-[#76b900] hover:underline"
-              >
-                Get an OpenAI API key →
-              </a>
+              <div style={{ background: '#060d18', border: '1px solid #1e2d3d', borderRadius: '8px', padding: '12px' }}>
+                <p style={{ color: '#8b9cb3', fontSize: '12px', marginBottom: '8px', fontWeight: 600 }}>Don&apos;t have one? Here&apos;s how to get it:</p>
+                <ol style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {[
+                    <>Go to <a href="https://platform.openai.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: '#76b900' }}>platform.openai.com/signup</a> and create a free account</>,
+                    <>Once logged in, click your profile icon (top-right) → <strong style={{ color: '#cdd6e0' }}>API keys</strong></>,
+                    <>Or go directly: <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" style={{ color: '#76b900' }}>platform.openai.com/api-keys</a></>,
+                    <>Click <strong style={{ color: '#cdd6e0' }}>Create new secret key</strong> → give it a name → click <strong style={{ color: '#cdd6e0' }}>Create secret key</strong></>,
+                    <>Copy the key immediately — OpenAI only shows it once. Paste it in the box above.</>,
+                    <><strong style={{ color: '#f59e0b' }}>Note:</strong> OpenAI TTS requires a paid account with billing set up. Add a card at <a href="https://platform.openai.com/settings/organization/billing" target="_blank" rel="noopener noreferrer" style={{ color: '#76b900' }}>platform.openai.com/billing</a>. Cost is very low (~$0.015 per 1,000 characters).</>,
+                  ].map((step, i) => (
+                    <li key={i} style={{ color: '#8b9cb3', fontSize: '12px', lineHeight: '1.5' }}>
+                      {step}
+                    </li>
+                  ))}
+                </ol>
+              </div>
             </div>
           )}
 
