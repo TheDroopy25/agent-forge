@@ -339,7 +339,7 @@ const defaultObservability: AgentState['observability'] = {
 
 // ─── Clockwise step order (uses section node IDs) ────────────────────────────
 
-const STEP_ORDER = [
+export const STEP_ORDER = [
   'identity', 'llm', 'voice', 'memory', 'data', 'tools',
   'skills', 'subagents', 'channels', 'guardrails', 'observability',
 ] as const;

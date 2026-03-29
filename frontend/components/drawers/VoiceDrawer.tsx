@@ -1,3 +1,4 @@
+import DrawerNextButton from '@/components/DrawerNextButton';
 'use client';
 
 import { useState } from 'react';
@@ -344,6 +345,7 @@ export default function VoiceDrawer({ open, onClose }: Props) {
             </select>
           </div>
         </div>
+      <DrawerNextButton />
       </SheetContent>
     </Sheet>
   );

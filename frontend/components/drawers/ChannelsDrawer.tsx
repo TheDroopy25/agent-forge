@@ -1,3 +1,4 @@
+import DrawerNextButton from '@/components/DrawerNextButton';
 'use client';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -261,6 +262,7 @@ export default function ChannelsDrawer({ open, onClose }: Props) {
             </div>
           </div>
         </div>
+      <DrawerNextButton />
       </SheetContent>
     </Sheet>
   );

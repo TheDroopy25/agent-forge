@@ -1,3 +1,4 @@
+import DrawerNextButton from '@/components/DrawerNextButton';
 'use client';
 
 import { useRef, useState } from 'react';
@@ -273,6 +274,7 @@ export default function DataDrawer({ open, onClose }: Props) {
             </button>
           </div>
         </div>
+      <DrawerNextButton />
       </SheetContent>
     </Sheet>
   );

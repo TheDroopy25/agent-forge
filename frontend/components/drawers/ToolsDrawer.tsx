@@ -1,3 +1,4 @@
+import DrawerNextButton from '@/components/DrawerNextButton';
 'use client';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -108,6 +109,7 @@ export default function ToolsDrawer({ open, onClose }: Props) {
             />
           </div>
         )}
+      <DrawerNextButton />
       </SheetContent>
     </Sheet>
   );

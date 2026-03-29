@@ -1,3 +1,4 @@
+import DrawerNextButton from '@/components/DrawerNextButton';
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -521,6 +522,7 @@ export default function LLMDrawer({ open, onClose }: Props) {
             );
           })}
         </div>
+      <DrawerNextButton />
       </SheetContent>
     </Sheet>
   );

@@ -1,3 +1,4 @@
+import DrawerNextButton from '@/components/DrawerNextButton';
 'use client';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -179,6 +180,7 @@ export default function ObservabilityDrawer({ open, onClose }: Props) {
             className="flex-shrink-0 mt-0.5"
           />
         </div>
+      <DrawerNextButton />
       </SheetContent>
     </Sheet>
   );

@@ -1,3 +1,4 @@
+import DrawerNextButton from '@/components/DrawerNextButton';
 'use client';
 
 import { useState } from 'react';
@@ -245,6 +246,7 @@ export default function GuardrailsDrawer({ open, onClose }: Props) {
             <span className="text-sm text-gray-400">per turn</span>
           </div>
         </div>
+      <DrawerNextButton />
       </SheetContent>
     </Sheet>
   );

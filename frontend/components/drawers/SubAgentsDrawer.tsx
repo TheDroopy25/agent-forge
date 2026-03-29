@@ -1,3 +1,4 @@
+import DrawerNextButton from '@/components/DrawerNextButton';
 'use client';
 
 import { useState } from 'react';
@@ -250,6 +251,7 @@ export default function SubAgentsDrawer({ open, onClose }: Props) {
             </div>
           </div>
         </div>
+      <DrawerNextButton />
       </SheetContent>
     </Sheet>
   );
