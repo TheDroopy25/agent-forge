@@ -241,9 +241,15 @@ export default function VoiceDrawer({ open, onClose }: Props) {
                     You&apos;ll see a &ldquo;Select a plan&rdquo; screen. <strong className="text-[#76b900]">Do not click any plan.</strong> Look for the small <strong className="text-gray-300">&ldquo;Skip&rdquo;</strong> link at the bottom of the page — click that to stay on the free plan (10,000 characters/month, no credit card needed)
                   </li>
                   <li className="text-xs text-gray-400">
-                    Once you&apos;re signed in and on your dashboard, <strong className="text-gray-300">click this link to go straight to your API key:</strong>{' '}
-                    <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener noreferrer" className="text-[#76b900] hover:underline">Get my ElevenLabs API key →</a>
-                    {' '}— copy it and paste it above
+                    Once signed in, go to your{' '}
+                    <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener noreferrer" className="text-[#76b900] hover:underline">API Keys page →</a>
+                    {' '}and click <strong className="text-gray-300">Create API Key</strong>
+                  </li>
+                  <li className="text-xs text-gray-400">
+                    Give it any name (like <em>&ldquo;My Agent&rdquo;</em>). You&apos;ll see a <strong className="text-gray-300">Restrict Key</strong> toggle — <strong className="text-[#76b900]">turn it OFF</strong>. This removes the confusing list of permissions. Then click <strong className="text-gray-300">Create Key</strong>
+                  </li>
+                  <li className="text-xs text-gray-400">
+                    Copy the key that appears and paste it above. <strong className="text-gray-300">Save it somewhere safe</strong> — ElevenLabs only shows it once
                   </li>
                 </ol>
               </div>
