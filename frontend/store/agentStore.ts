@@ -45,14 +45,6 @@ export interface AgentState {
     externalDb: { enabled: boolean; connectionString: string };
   };
 
-  // Data/Context
-  data: {
-    files: Array<{ name: string; type: string }>;
-    urls: string[];
-    apiConnections: Array<{ key: string; value: string }>;
-    structured: boolean;
-  };
-
   // Tools
   tools: {
     webSearch: boolean;
@@ -70,35 +62,18 @@ export interface AgentState {
 
   // Skills
   skills: {
-    discord: boolean;
-    github: boolean;
-    googleWorkspace: boolean;
+    cronScheduler: boolean;
     weather: boolean;
     summarize: boolean;
-    figma: boolean;
     clawHub: boolean;
     webScraper: boolean;
-    cronScheduler: boolean;
-    notion: boolean;
-    slack: boolean;
-    airtable: boolean;
-  };
-
-  // Sub-Agents
-  subAgents: {
-    agents: Array<{ id: string; name: string; purpose: string; model: string }>;
-    routingMode: string;
-    maxConcurrent: number;
-    role: string;
+    discord: boolean;
+    github: boolean;
   };
 
   // Channels
   channels: {
-    discord: { enabled: boolean; token: string; guildId: string };
-    telegram: { enabled: boolean; botToken: string };
-    whatsapp: { enabled: boolean };
-    restApi: { enabled: boolean; webhookUrl: string; secret: string };
-    sms: { enabled: boolean; accountSid: string; authToken: string };
+    discord: { enabled: boolean; token: string; guildId: string; channelId: string };
     cliOnly: boolean;
     primaryChannel: string;
   };
@@ -123,6 +98,9 @@ export interface AgentState {
     contextCompression: boolean;
   };
 
+  // Target OS selected during onboarding
+  targetOS: 'mac' | 'linux' | 'windows' | '';
+
   // Section completion tracking
   sectionComplete: Record<string, boolean>;
 
@@ -131,19 +109,22 @@ export interface AgentState {
   nextStep: string | null;
   agentNamed: boolean;
 
+  // Visited sections tracking
+  visitedSections: Record<string, boolean>;
+
   // UI state
   activeDrawer: string | null;
   setActiveDrawer: (drawer: string | null) => void;
 
   // Actions
+  markVisited: (section: string) => void;
+  setTargetOS: (os: 'mac' | 'linux' | 'windows') => void;
   setIdentity: (data: Partial<AgentState['identity']>) => void;
   setLLM: (data: Partial<AgentState['llm']>) => void;
   setVoice: (data: Partial<AgentState['voice']>) => void;
   setMemory: (data: Partial<AgentState['memory']>) => void;
-  setData: (data: Partial<AgentState['data']>) => void;
   setTools: (data: Partial<AgentState['tools']>) => void;
   setSkills: (data: Partial<AgentState['skills']>) => void;
-  setSubAgents: (data: Partial<AgentState['subAgents']>) => void;
   setChannels: (data: Partial<AgentState['channels']>) => void;
   setGuardrails: (data: Partial<AgentState['guardrails']>) => void;
   setObservability: (data: Partial<AgentState['observability']>) => void;
@@ -152,8 +133,8 @@ export interface AgentState {
 
 // ─── Section Completion Logic ─────────────────────────────────────────────────
 
-function computeSectionComplete(state: Omit<AgentState, 'sectionComplete' | 'completedCount' | 'nextStep' | 'agentNamed' | 'activeDrawer' | 'setActiveDrawer' | keyof ActionKeys>): Record<string, boolean> {
-  const { identity, llm, voice, memory, data, tools, skills, subAgents, channels, guardrails, observability } = state;
+function computeSectionComplete(state: Omit<AgentState, 'sectionComplete' | 'completedCount' | 'nextStep' | 'agentNamed' | 'activeDrawer' | 'setActiveDrawer' | 'visitedSections' | 'targetOS' | keyof ActionKeys>): Record<string, boolean> {
+  const { identity, llm, voice, memory, tools, skills, channels, guardrails, observability } = state;
 
   const anyMemoryEnabled =
     memory.shortTerm.enabled ||
@@ -175,25 +156,16 @@ function computeSectionComplete(state: Omit<AgentState, 'sectionComplete' | 'com
     tools.customMcp;
 
   const anySkillEnabled =
-    skills.discord ||
-    skills.github ||
-    skills.googleWorkspace ||
+    skills.cronScheduler ||
     skills.weather ||
     skills.summarize ||
-    skills.figma ||
     skills.clawHub ||
     skills.webScraper ||
-    skills.cronScheduler ||
-    skills.notion ||
-    skills.slack ||
-    skills.airtable;
+    skills.discord ||
+    skills.github;
 
   const anyChannelEnabled =
     channels.discord.enabled ||
-    channels.telegram.enabled ||
-    channels.whatsapp.enabled ||
-    channels.restApi.enabled ||
-    channels.sms.enabled ||
     channels.cliOnly;
 
   return {
@@ -201,10 +173,8 @@ function computeSectionComplete(state: Omit<AgentState, 'sectionComplete' | 'com
     llm: llm.provider.length > 0 && llm.model.length > 0,
     voice: voice.enabled === true,
     memory: anyMemoryEnabled,
-    data: data.files.length > 0 || data.urls.length > 0 || data.apiConnections.length > 0,
     tools: anyToolEnabled,
     skills: anySkillEnabled,
-    subAgents: subAgents.agents.length > 0,
     channels: anyChannelEnabled,
     guardrails: guardrails.neverDo.length > 0 || guardrails.alwaysAsk.length > 0,
     observability:
@@ -221,14 +191,14 @@ type ActionKeys = {
   setLLM: AgentState['setLLM'];
   setVoice: AgentState['setVoice'];
   setMemory: AgentState['setMemory'];
-  setData: AgentState['setData'];
   setTools: AgentState['setTools'];
   setSkills: AgentState['setSkills'];
-  setSubAgents: AgentState['setSubAgents'];
   setChannels: AgentState['setChannels'];
   setGuardrails: AgentState['setGuardrails'];
   setObservability: AgentState['setObservability'];
   updateSectionComplete: AgentState['updateSectionComplete'];
+  markVisited: AgentState['markVisited'];
+  setTargetOS: AgentState['setTargetOS'];
 };
 
 // ─── Default State ────────────────────────────────────────────────────────────
@@ -266,55 +236,32 @@ const defaultMemory: AgentState['memory'] = {
   externalDb: { enabled: false, connectionString: '' },
 };
 
-const defaultData: AgentState['data'] = {
-  files: [],
-  urls: [],
-  apiConnections: [],
-  structured: true,
-};
-
 const defaultTools: AgentState['tools'] = {
-  webSearch: false,
-  codeExecution: false,
-  fileSystem: false,
-  browserControl: false,
-  terminal: false,
-  imageAnalysis: false,
-  pdfReader: false,
-  calendar: false,
-  email: false,
+  webSearch: true,
+  codeExecution: true,
+  fileSystem: true,
+  browserControl: true,
+  terminal: true,
+  imageAnalysis: true,
+  pdfReader: true,
+  calendar: true,
+  email: true,
   customMcp: false,
   customMcpUrl: '',
 };
 
 const defaultSkills: AgentState['skills'] = {
+  cronScheduler: true,
+  weather: true,
+  summarize: true,
+  clawHub: true,
+  webScraper: false,
   discord: false,
   github: false,
-  googleWorkspace: false,
-  weather: false,
-  summarize: false,
-  figma: false,
-  clawHub: false,
-  webScraper: false,
-  cronScheduler: false,
-  notion: false,
-  slack: false,
-  airtable: false,
-};
-
-const defaultSubAgents: AgentState['subAgents'] = {
-  agents: [],
-  routingMode: 'specialization',
-  maxConcurrent: 3,
-  role: 'coordinator',
 };
 
 const defaultChannels: AgentState['channels'] = {
-  discord: { enabled: false, token: '', guildId: '' },
-  telegram: { enabled: false, botToken: '' },
-  whatsapp: { enabled: false },
-  restApi: { enabled: false, webhookUrl: '', secret: '' },
-  sms: { enabled: false, accountSid: '', authToken: '' },
+  discord: { enabled: false, token: '', guildId: '', channelId: '' },
   cliOnly: false,
   primaryChannel: 'cli',
 };
@@ -340,31 +287,33 @@ const defaultObservability: AgentState['observability'] = {
 // ─── Clockwise step order (uses section node IDs) ────────────────────────────
 
 export const STEP_ORDER = [
-  'identity', 'llm', 'voice', 'memory', 'data', 'tools',
-  'skills', 'subagents', 'channels', 'guardrails', 'observability',
+  'identity', 'llm', 'voice', 'memory', 'tools',
+  'skills', 'channels', 'guardrails', 'observability',
 ] as const;
 
 // Map section node IDs to sectionComplete keys where they differ
 const SECTION_TO_STORE_KEY: Record<string, string> = {
-  subagents: 'subAgents',
 };
 
 // ─── Helper: recompute derived fields after any mutation ──────────────────────
 
 function withDerived(state: Partial<AgentState>): Pick<AgentState, 'sectionComplete' | 'completedCount' | 'nextStep' | 'agentNamed'> {
-  const sectionComplete = computeSectionComplete({
+  const rawComplete = computeSectionComplete({
     identity: (state.identity ?? defaultIdentity),
     llm: (state.llm ?? defaultLLM),
     voice: (state.voice ?? defaultVoice),
     memory: (state.memory ?? defaultMemory),
-    data: (state.data ?? defaultData),
     tools: (state.tools ?? defaultTools),
     skills: (state.skills ?? defaultSkills),
-    subAgents: (state.subAgents ?? defaultSubAgents),
     channels: (state.channels ?? defaultChannels),
     guardrails: (state.guardrails ?? defaultGuardrails),
     observability: (state.observability ?? defaultObservability),
   });
+
+  const visitedSections = state.visitedSections ?? {};
+  const sectionComplete = Object.fromEntries(
+    Object.entries(rawComplete).map(([k, v]) => [k, v && (visitedSections[k] ?? false)])
+  );
 
   const completedCount = Object.values(sectionComplete).filter(Boolean).length;
 
@@ -385,13 +334,13 @@ const initialStateSlice = {
   llm: defaultLLM,
   voice: defaultVoice,
   memory: defaultMemory,
-  data: defaultData,
   tools: defaultTools,
   skills: defaultSkills,
-  subAgents: defaultSubAgents,
   channels: defaultChannels,
   guardrails: defaultGuardrails,
   observability: defaultObservability,
+  visitedSections: {} as Record<string, boolean>,
+  targetOS: '' as 'mac' | 'linux' | 'windows' | '',
 };
 
 const initialDerived = withDerived(initialStateSlice);
@@ -404,6 +353,18 @@ export const useAgentStore = create<AgentState>()(
 
       activeDrawer: null,
       setActiveDrawer: (drawer) => set({ activeDrawer: drawer }, false, 'setActiveDrawer'),
+
+      markVisited: (section) =>
+        set(
+          (state) => {
+            const next = { ...state, visitedSections: { ...state.visitedSections, [section]: true } };
+            return { visitedSections: next.visitedSections, ...withDerived(next) };
+          },
+          false,
+          'markVisited'
+        ),
+
+      setTargetOS: (os) => set({ targetOS: os }, false, 'setTargetOS'),
 
       setIdentity: (data) =>
         set(
@@ -445,16 +406,6 @@ export const useAgentStore = create<AgentState>()(
           'setMemory'
         ),
 
-      setData: (data) =>
-        set(
-          (state) => {
-            const next = { ...state, data: { ...state.data, ...data } };
-            return { data: next.data, ...withDerived(next) };
-          },
-          false,
-          'setData'
-        ),
-
       setTools: (data) =>
         set(
           (state) => {
@@ -473,16 +424,6 @@ export const useAgentStore = create<AgentState>()(
           },
           false,
           'setSkills'
-        ),
-
-      setSubAgents: (data) =>
-        set(
-          (state) => {
-            const next = { ...state, subAgents: { ...state.subAgents, ...data } };
-            return { subAgents: next.subAgents, ...withDerived(next) };
-          },
-          false,
-          'setSubAgents'
         ),
 
       setChannels: (data) =>

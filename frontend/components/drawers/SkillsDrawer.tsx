@@ -17,33 +17,23 @@ interface SkillDefinition {
 import Tip from "@/components/Tip";
 
 const SKILL_TOOLTIPS: Record<string, string> = {
-  discord: 'Connects to Discord — read/send messages, manage channels, react, create threads. Requires a bot token. Resource: persistent WebSocket connection (~5MB RAM).',
-  github: 'Read issues, PRs, CI status, and commit code. Requires a GitHub token. Great for dev workflow agents. No significant resource impact.',
-  googleWorkspace: 'Access Gmail, Calendar, Drive, Docs, Sheets. Requires Google OAuth. High utility for personal/business assistant agents. API rate limits apply.',
+  cronScheduler: 'Schedule recurring tasks (send reports, check inboxes, post content). Runs in background — minimal resource use when idle.',
   weather: 'Fetch current conditions and forecasts via wttr.in or Open-Meteo. Free, no API key needed. Minimal resource use.',
   summarize: 'Extract and summarize text from URLs, PDFs, and local files. Adds 1-5 seconds per document. Token cost scales with document length.',
-  figma: 'Access Figma design files, export assets, read design tokens. Requires Figma API key. Read-only by default.',
   clawHub: 'Browse and install agent skill packs from ClawHub.com. Extends what your agent can do without writing code. Minimal overhead.',
   webScraper: 'Scrape and extract content from any website. Uses Playwright — ~200MB RAM per session, 5-30 seconds per page. Use sparingly.',
-  cronScheduler: 'Schedule recurring tasks (send reports, check inboxes, post content). Runs in background — minimal resource use when idle.',
-  notion: 'Read and write Notion pages, databases, and blocks. Requires Notion integration token. Useful for knowledge base agents.',
-  slack: 'Send and receive Slack messages, manage channels. Requires a Slack app token. ~5MB RAM for WebSocket connection.',
-  airtable: 'Query and update Airtable bases and tables. Requires Airtable API key. Good for structured data workflows.',
+  discord: 'Connects to Discord — read/send messages, manage channels, react, create threads. Requires a bot token. Resource: persistent WebSocket connection (~5MB RAM).',
+  github: 'Read issues, PRs, CI status, and commit code. Requires a GitHub token. Great for dev workflow agents. No significant resource impact.',
 };
 
 const SKILLS: SkillDefinition[] = [
-  { key: 'discord',         label: 'Discord',          icon: '💬' },
-  { key: 'github',          label: 'GitHub',            icon: '🐙' },
-  { key: 'googleWorkspace', label: 'Google Workspace',  icon: '📊' },
+  { key: 'cronScheduler',   label: 'Cron/Scheduler',    icon: '⏰' },
   { key: 'weather',         label: 'Weather',           icon: '🌤️' },
   { key: 'summarize',       label: 'Summarize',         icon: '📝' },
-  { key: 'figma',           label: 'Figma',             icon: '🎨' },
   { key: 'clawHub',         label: 'ClawHub',           icon: '🐾' },
   { key: 'webScraper',      label: 'Web Scraper',       icon: '🕷️' },
-  { key: 'cronScheduler',   label: 'Cron/Scheduler',    icon: '⏰' },
-  { key: 'notion',          label: 'Notion',            icon: '📋' },
-  { key: 'slack',           label: 'Slack',             icon: '💼' },
-  { key: 'airtable',        label: 'Airtable',          icon: '🗃️' },
+  { key: 'discord',         label: 'Discord',           icon: '💬' },
+  { key: 'github',          label: 'GitHub',            icon: '🐙' },
 ];
 
 interface Props {

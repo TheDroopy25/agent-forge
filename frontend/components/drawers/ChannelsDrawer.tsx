@@ -17,9 +17,6 @@ export default function ChannelsDrawer({ open, onClose }: Props) {
 
   const enabledChannelOptions: Array<{ value: string; label: string }> = [
     ...(channels.discord.enabled ? [{ value: 'discord', label: 'Discord' }] : []),
-    ...(channels.telegram.enabled ? [{ value: 'telegram', label: 'Telegram' }] : []),
-    ...(channels.restApi.enabled ? [{ value: 'restapi', label: 'REST API' }] : []),
-    ...(channels.sms.enabled ? [{ value: 'sms', label: 'SMS/Twilio' }] : []),
     { value: 'cli', label: 'CLI Only' },
   ];
 
@@ -75,125 +72,6 @@ export default function ChannelsDrawer({ open, onClose }: Props) {
                     setChannels({ discord: { ...channels.discord, guildId: e.target.value } })
                   }
                   placeholder="Guild ID"
-                  className="w-full bg-[#12121a] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#76b900] transition-colors"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Telegram */}
-          <div className={`border rounded-lg p-4 space-y-3 transition-all ${channels.telegram.enabled ? 'border-[#76b900]/60 bg-[#76b900]/5' : 'border-[#1e2d3d] bg-[#1a1a2e]'}`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-white">Telegram</span>
-                <Tip text="Connect via Telegram Bot API. Polling-based — lightweight. ~2MB RAM. Great for mobile-first users. Requires creating a bot via @BotFather." />
-              </div>
-              <Switch
-                checked={channels.telegram.enabled}
-                onCheckedChange={(checked) =>
-                  setChannels({ telegram: { ...channels.telegram, enabled: checked } })
-                }
-              />
-            </div>
-            {channels.telegram.enabled && (
-              <input
-                type="password"
-                value={channels.telegram.botToken}
-                onChange={(e) =>
-                  setChannels({ telegram: { ...channels.telegram, botToken: e.target.value } })
-                }
-                placeholder="Bot Token"
-                className="w-full bg-[#12121a] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#76b900] transition-colors"
-              />
-            )}
-          </div>
-
-          {/* WhatsApp — disabled, coming soon */}
-          <div className="border border-[#1e2d3d] bg-[#1a1a2e] rounded-lg p-4 opacity-60">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-400">WhatsApp</span>
-                  <Tip text="Business API integration — requires WhatsApp Business account approval. Higher setup barrier but huge audience reach." />
-                </div>
-                <span className="text-xs bg-amber-900/40 border border-amber-500 text-amber-300 rounded px-2 py-0.5">
-                  Coming Soon
-                </span>
-              </div>
-              <Switch checked={false} disabled onCheckedChange={() => {}} />
-            </div>
-          </div>
-
-          {/* REST API */}
-          <div className={`border rounded-lg p-4 space-y-3 transition-all ${channels.restApi.enabled ? 'border-[#76b900]/60 bg-[#76b900]/5' : 'border-[#1e2d3d] bg-[#1a1a2e]'}`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-white">REST API</span>
-                <Tip text="Expose the agent as an HTTP endpoint. Any app can call it with a POST request. Zero persistent connection overhead. Best for integrating into existing systems." />
-              </div>
-              <Switch
-                checked={channels.restApi.enabled}
-                onCheckedChange={(checked) =>
-                  setChannels({ restApi: { ...channels.restApi, enabled: checked } })
-                }
-              />
-            </div>
-            {channels.restApi.enabled && (
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  value={channels.restApi.webhookUrl}
-                  onChange={(e) =>
-                    setChannels({ restApi: { ...channels.restApi, webhookUrl: e.target.value } })
-                  }
-                  placeholder="Webhook URL"
-                  className="w-full bg-[#12121a] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#76b900] transition-colors"
-                />
-                <input
-                  type="password"
-                  value={channels.restApi.secret}
-                  onChange={(e) =>
-                    setChannels({ restApi: { ...channels.restApi, secret: e.target.value } })
-                  }
-                  placeholder="Secret"
-                  className="w-full bg-[#12121a] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#76b900] transition-colors"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* SMS/Twilio */}
-          <div className={`border rounded-lg p-4 space-y-3 transition-all ${channels.sms.enabled ? 'border-[#76b900]/60 bg-[#76b900]/5' : 'border-[#1e2d3d] bg-[#1a1a2e]'}`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-white">SMS / Twilio</span>
-                <Tip text="Send and receive SMS messages. Costs ~$0.0079/message (US). Requires Twilio account. Best for notifications and simple Q&A use cases." />
-              </div>
-              <Switch
-                checked={channels.sms.enabled}
-                onCheckedChange={(checked) =>
-                  setChannels({ sms: { ...channels.sms, enabled: checked } })
-                }
-              />
-            </div>
-            {channels.sms.enabled && (
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  value={channels.sms.accountSid}
-                  onChange={(e) =>
-                    setChannels({ sms: { ...channels.sms, accountSid: e.target.value } })
-                  }
-                  placeholder="Account SID"
-                  className="w-full bg-[#12121a] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#76b900] transition-colors"
-                />
-                <input
-                  type="password"
-                  value={channels.sms.authToken}
-                  onChange={(e) =>
-                    setChannels({ sms: { ...channels.sms, authToken: e.target.value } })
-                  }
-                  placeholder="Auth Token"
                   className="w-full bg-[#12121a] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#76b900] transition-colors"
                 />
               </div>

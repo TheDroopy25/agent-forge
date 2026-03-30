@@ -19,10 +19,8 @@ import IdentityDrawer from './drawers/IdentityDrawer';
 import LLMDrawer from './drawers/LLMDrawer';
 import VoiceDrawer from './drawers/VoiceDrawer';
 import MemoryDrawer from './drawers/MemoryDrawer';
-import DataDrawer from './drawers/DataDrawer';
 import ToolsDrawer from './drawers/ToolsDrawer';
 import SkillsDrawer from './drawers/SkillsDrawer';
-import SubAgentsDrawer from './drawers/SubAgentsDrawer';
 import ChannelsDrawer from './drawers/ChannelsDrawer';
 import GuardrailsDrawer from './drawers/GuardrailsDrawer';
 import ObservabilityDrawer from './drawers/ObservabilityDrawer';
@@ -41,10 +39,8 @@ const SECTIONS = [
   { id: 'llm',           label: 'LLM / Brain',    icon: '🤖' },
   { id: 'voice',         label: 'Voice',           icon: '🎙️' },
   { id: 'memory',        label: 'Memory',          icon: '💾' },
-  { id: 'data',          label: 'Data / Context', icon: '📁' },
   { id: 'tools',         label: 'Tools',           icon: '🔧' },
   { id: 'skills',        label: 'Skills',          icon: '⚡' },
-  { id: 'subagents',     label: 'Sub-Agents',      icon: '👥' },
   { id: 'channels',      label: 'Channels',        icon: '📡' },
   { id: 'guardrails',    label: 'Guardrails',      icon: '🛡️' },
   { id: 'observability', label: 'Observability',   icon: '📊' },
@@ -62,6 +58,7 @@ function AgentCanvasInner() {
   const sectionComplete = useAgentStore((s) => s.sectionComplete);
   const activeDrawer = useAgentStore((s) => s.activeDrawer);
   const setActiveDrawer = useAgentStore((s) => s.setActiveDrawer);
+  const markVisited = useAgentStore((s) => s.markVisited);
 
   // Build static nodes — hub + 11 section nodes
   const nodes = useMemo<Node[]>(() => {
@@ -128,6 +125,7 @@ function AgentCanvasInner() {
         onNodeClick={(_event, node) => {
           if (node.id !== 'hub') {
             setActiveDrawer(node.id as SectionId);
+            markVisited(node.id);
           }
         }}
       >
@@ -144,10 +142,8 @@ function AgentCanvasInner() {
       <LLMDrawer           open={activeDrawer === 'llm'}           onClose={() => setActiveDrawer(null)} />
       <VoiceDrawer         open={activeDrawer === 'voice'}         onClose={() => setActiveDrawer(null)} />
       <MemoryDrawer        open={activeDrawer === 'memory'}        onClose={() => setActiveDrawer(null)} />
-      <DataDrawer          open={activeDrawer === 'data'}          onClose={() => setActiveDrawer(null)} />
       <ToolsDrawer         open={activeDrawer === 'tools'}         onClose={() => setActiveDrawer(null)} />
       <SkillsDrawer        open={activeDrawer === 'skills'}        onClose={() => setActiveDrawer(null)} />
-      <SubAgentsDrawer     open={activeDrawer === 'subagents'}     onClose={() => setActiveDrawer(null)} />
       <ChannelsDrawer      open={activeDrawer === 'channels'}      onClose={() => setActiveDrawer(null)} />
       <GuardrailsDrawer    open={activeDrawer === 'guardrails'}    onClose={() => setActiveDrawer(null)} />
       <ObservabilityDrawer open={activeDrawer === 'observability'} onClose={() => setActiveDrawer(null)} />

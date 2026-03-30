@@ -8,22 +8,15 @@ const SECTIONS = [
   'llm',
   'voice',
   'memory',
-  'data',
   'tools',
   'skills',
-  'subagents',
   'channels',
   'guardrails',
   'observability',
 ] as const;
 
-// Map section keys in the progress bar to keys used in sectionComplete
-const SECTION_KEY_MAP: Record<string, string> = {
-  subagents: 'subAgents',
-};
-
 function toStoreKey(section: string): string {
-  return SECTION_KEY_MAP[section] ?? section;
+  return section;
 }
 
 const SECTION_LABELS: Record<string, string> = {
@@ -31,18 +24,16 @@ const SECTION_LABELS: Record<string, string> = {
   llm: 'LLM',
   voice: 'Voice',
   memory: 'Memory',
-  data: 'Data',
   tools: 'Tools',
   skills: 'Skills',
-  subagents: 'Sub-Agents',
   channels: 'Channels',
   guardrails: 'Guardrails',
   observability: 'Observability',
 };
 
 const STEP_NUMBERS: Record<string, number> = {
-  identity: 1, llm: 2, voice: 3, memory: 4, data: 5, tools: 6,
-  skills: 7, subagents: 8, channels: 9, guardrails: 10, observability: 11,
+  identity: 1, llm: 2, voice: 3, memory: 4, tools: 5,
+  skills: 6, channels: 7, guardrails: 8, observability: 9,
 };
 
 interface BottomBarProps {
@@ -58,7 +49,7 @@ export function BottomBar({ onBuildClick }: BottomBarProps) {
   const identityDone = sectionComplete['identity'] ?? false;
   const llmDone = sectionComplete['llm'] ?? false;
   const canBuild = identityDone && llmDone;
-  const allComplete = completedCount === 11;
+  const allComplete = completedCount === 9;
 
   return (
     <div
@@ -86,7 +77,7 @@ export function BottomBar({ onBuildClick }: BottomBarProps) {
         ) : (
           <>
             <span className="text-xs" style={{ color: '#8b9cb3' }}>
-              {allComplete ? '✅ Ready to build!' : `${completedCount} of 11 sections configured`}
+              {allComplete ? '✅ Ready to build!' : `${completedCount} of 9 sections configured`}
             </span>
             <div className="flex items-center gap-[3px]">
               {SECTIONS.map((section) => {

@@ -156,6 +156,7 @@ interface Props {
 export default function LLMDrawer({ open, onClose }: Props) {
   const llm = useAgentStore((s) => s.llm);
   const setLLM = useAgentStore((s) => s.setLLM);
+  const targetOS = useAgentStore((s) => s.targetOS);
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
   const [oauthTokens, setOAuthTokens] = useState<Record<string, string>>({});
   const [setupTokens, setSetupTokens] = useState<Record<string, string>>({});
@@ -365,9 +366,31 @@ export default function LLMDrawer({ open, onClose }: Props) {
     );
   }
 
+  function getAnthropicSetupSteps(): string[] {
+    const openTerminalStep =
+      targetOS === 'mac'
+        ? 'Open Terminal: press Cmd+Space, type "Terminal", press Enter'
+        : targetOS === 'windows'
+        ? 'Open Terminal: press the Windows key, type "Terminal" or "Command Prompt", press Enter'
+        : targetOS === 'linux'
+        ? 'Open Terminal: press Ctrl+Alt+T to open a terminal'
+        : 'Open Terminal: on Mac press Cmd+Space and type "Terminal"; on Windows press the Windows key and type "Terminal"; on Linux press Ctrl+Alt+T';
+
+    return [
+      'First, make sure Claude Code is installed on your computer (it came with OpenClaw)',
+      openTerminalStep,
+      'Type this exactly and press Enter: claude setup-token',
+      'A browser window will open — sign in to your Claude.ai account',
+      'When the browser closes, look back at your Terminal window',
+      'You will see a long code starting with "sk-" — copy the entire thing',
+      'Paste it in the box below',
+    ];
+  }
+
   function renderAnthropicPanel(p: Provider) {
     const token = setupTokens[p.id] ?? '';
     const connected = !!token;
+    const dynamicSteps = getAnthropicSetupSteps();
 
     return (
       <div className="space-y-3">
@@ -391,16 +414,14 @@ export default function LLMDrawer({ open, onClose }: Props) {
         ) : (
           <div className="space-y-3">
             <p className="text-sm font-semibold text-white">Connect your Claude.ai subscription</p>
-            {p.setupTokenSteps && (
-              <ol className="space-y-1">
-                {p.setupTokenSteps.map((step, i) => (
-                  <li key={i} className="text-xs text-gray-400 flex gap-2">
-                    <span className="text-[#76b900] font-bold shrink-0">{i + 1}.</span>
-                    {step}
-                  </li>
-                ))}
-              </ol>
-            )}
+            <ol className="space-y-1">
+              {dynamicSteps.map((step, i) => (
+                <li key={i} className="text-xs text-gray-400 flex gap-2">
+                  <span className="text-[#76b900] font-bold shrink-0">{i + 1}.</span>
+                  {step}
+                </li>
+              ))}
+            </ol>
             <input
               type="password"
               placeholder="Paste your setup token here"

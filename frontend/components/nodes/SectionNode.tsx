@@ -15,8 +15,7 @@ function useSectionStatus(section: string): 'complete' | 'inProgress' | 'notStar
   const sectionComplete = useAgentStore((s) => s.sectionComplete);
   const state = useAgentStore((s) => s);
 
-  const storeKey = section === 'subagents' ? 'subAgents' : section;
-  if (sectionComplete[storeKey]) return 'complete';
+  if (sectionComplete[section]) return 'complete';
 
   // Detect "in progress" — any non-default value set
   switch (section) {
@@ -39,14 +38,6 @@ function useSectionStatus(section: string): 'complete' | 'inProgress' | 'notStar
       )
         return 'inProgress';
       break;
-    case 'data':
-      if (
-        state.data.files.length > 0 ||
-        state.data.urls.length > 0 ||
-        state.data.apiConnections.length > 0
-      )
-        return 'inProgress';
-      break;
     case 'tools': {
       const { webSearch, codeExecution, fileSystem, browserControl, terminal,
               imageAnalysis, pdfReader, calendar, email, customMcp } = state.tools;
@@ -56,23 +47,16 @@ function useSectionStatus(section: string): 'complete' | 'inProgress' | 'notStar
       break;
     }
     case 'skills': {
-      const { discord, github, googleWorkspace, weather, summarize, figma,
-              clawHub, webScraper, cronScheduler, notion, slack, airtable } = state.skills;
-      if (discord || github || googleWorkspace || weather || summarize || figma ||
-          clawHub || webScraper || cronScheduler || notion || slack || airtable)
+      const { cronScheduler, weather, summarize, clawHub,
+              webScraper, discord, github } = state.skills;
+      if (cronScheduler || weather || summarize || clawHub ||
+          webScraper || discord || github)
         return 'inProgress';
       break;
     }
-    case 'subagents':
-      if (state.subAgents.agents.length > 0) return 'inProgress';
-      break;
     case 'channels':
       if (
         state.channels.discord.enabled ||
-        state.channels.telegram.enabled ||
-        state.channels.whatsapp.enabled ||
-        state.channels.restApi.enabled ||
-        state.channels.sms.enabled ||
         state.channels.cliOnly
       )
         return 'inProgress';
@@ -105,21 +89,18 @@ const STEP_NUMBERS: Record<string, number> = {
   llm: 2,
   voice: 3,
   memory: 4,
-  data: 5,
-  tools: 6,
-  skills: 7,
-  subagents: 8,
-  channels: 9,
-  guardrails: 10,
-  observability: 11,
+  tools: 5,
+  skills: 6,
+  channels: 7,
+  guardrails: 8,
+  observability: 9,
 };
 
 export default function SectionNode({ data }: NodeProps & { data: SectionNodeData }) {
   const sectionComplete = useAgentStore((s) => s.sectionComplete);
   const nextStep = useAgentStore((s) => s.nextStep);
   const status = useSectionStatus(data.section);
-  const storeKey = data.section === 'subagents' ? 'subAgents' : data.section;
-  const isComplete = sectionComplete[storeKey] ?? false;
+  const isComplete = sectionComplete[data.section] ?? false;
   const isNextStep = nextStep === data.section && !isComplete;
   const stepNumber = STEP_NUMBERS[data.section];
 
