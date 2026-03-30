@@ -29,7 +29,13 @@
       "main.js",
       "preload.js",
       "ipc-handlers.js",
-      "../frontend/out/**/*"
+      {
+        "from": "../frontend/out",
+        "to": "frontend/out",
+        "filter": [
+          "**/*"
+        ]
+      }
     ],
     "mac": {
       "target": [

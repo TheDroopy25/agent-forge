@@ -24,8 +24,19 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:3000');
     mainWindow.webContents.openDevTools();
   } else {
-    const indexPath = path.join(__dirname, '..', 'frontend', 'out', 'index.html');
-    mainWindow.loadFile(indexPath);
+    // In the packaged app, electron-builder maps ../frontend/out/** into
+    // the app root alongside main.js, so the path is just frontend/out/index.html
+    const fs = require('fs');
+    const candidates = [
+      path.join(__dirname, 'frontend', 'out', 'index.html'),
+      path.join(__dirname, '..', 'frontend', 'out', 'index.html'),
+      path.join(process.resourcesPath, 'frontend', 'out', 'index.html'),
+    ];
+    const indexPath = candidates.find(fs.existsSync) ?? candidates[0];
+    mainWindow.loadFile(indexPath).catch((err) => {
+      // Fallback: show an error page so it's not just a black screen
+      mainWindow.loadURL(`data:text/html,<h2 style="font-family:sans-serif;padding:40px;color:#e2e8f0;background:#0a0a0f;margin:0">Could not load AgentForge UI.<br><small style="color:#666">${indexPath}</small></h2>`);
+    });
   }
 
   mainWindow.on('closed', () => {
