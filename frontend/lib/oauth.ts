@@ -107,7 +107,8 @@ export async function initiateOAuth(
     prompt: 'consent',
   });
 
-  window.location.href = `${config.authUrl}?${params.toString()}`;
+  // Open in new tab so the user doesn't lose their place in AgentForge
+  window.open(`${config.authUrl}?${params.toString()}`, '_blank');
 }
 
 // Listen for the OAuth redirect back — reads fragment hash set by callback route

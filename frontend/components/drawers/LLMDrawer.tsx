@@ -325,12 +325,26 @@ export default function LLMDrawer({ open, onClose }: Props) {
             <p className="text-xs text-gray-400 leading-relaxed">
               This uses your ChatGPT Plus subscription ($20/mo) — no extra charges. Click the button below to sign in.
             </p>
+            {/* Web/Vercel notice — OAuth only works in the desktop app */}
+            {typeof window !== 'undefined' && !window.electronAPI && (
+              <div style={{ background: '#1a1200', border: '1px solid #92400e', borderRadius: 6, padding: '8px 12px' }}>
+                <p className="text-xs" style={{ color: '#fbbf24' }}>
+                  ⚠️ ChatGPT sign-in works in the <strong>desktop app</strong>. You&apos;re currently in the browser preview — use an API key below to test here.
+                </p>
+              </div>
+            )}
             <button
               onClick={async () => {
-                const config = OAUTH_CONFIGS['openai-codex'];
-                const clientId = process.env.NEXT_PUBLIC_OPENAI_CLIENT_ID || config.defaultClientId!;
-                const redirectUri = `${window.location.origin}/api/auth/callback`;
-                await initiateOAuth('openai-codex', clientId, redirectUri);
+                // Desktop app: use Electron IPC OAuth flow
+                if (typeof window !== 'undefined' && window.electronAPI) {
+                  const config = OAUTH_CONFIGS['openai-codex'];
+                  const clientId = process.env.NEXT_PUBLIC_OPENAI_CLIENT_ID || config.defaultClientId!;
+                  const redirectUri = `http://127.0.0.1:1455/auth/callback`;
+                  await initiateOAuth('openai-codex', clientId, redirectUri);
+                  return;
+                }
+                // Browser fallback: show API key mode
+                setAuthModes((prev) => ({ ...prev, [p.id]: 'apikey' }));
               }}
               className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg bg-[#10a37f] text-white font-medium text-sm hover:bg-[#0d8f6e] transition-colors"
             >
