@@ -63,9 +63,10 @@ const PROVIDERS: Provider[] = [
     freeNote: '✅ Free — 1,500 requests/day on Gemini 2.0 Flash',
     apiKeyUrl: 'https://aistudio.google.com/app/apikey',
     apiKeySteps: [
-      'Go to aistudio.google.com → Sign in with Google',
-      'Click "Get API Key" → Create API key',
-      'Paste it here — free tier works immediately',
+      'Google AI Studio just opened in a new tab',
+      'Sign in with your Google account if prompted',
+      'Click "Get API key" → "Create API key in new project"',
+      'Copy the key and paste it below — free tier works immediately',
     ],
     supportsOAuth: true,
     oauthProvider: 'google',
@@ -459,6 +460,8 @@ export default function LLMDrawer({ open, onClose }: Props) {
                 const sharedClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
                 const clientId = sharedClientId || oauthClientIds['google'];
                 if (!clientId) {
+                  // Open AI Studio in a new tab, then show API key instructions
+                  window.open('https://aistudio.google.com/app/apikey', '_blank');
                   setAuthModes((prev) => ({ ...prev, [p.id]: 'apikey' }));
                   return;
                 }
