@@ -10,7 +10,7 @@
     "build:mac": "npm run build:frontend && electron-builder --mac",
     "build:win": "npm run build:frontend && electron-builder --win",
     "build:linux": "npm run build:frontend && electron-builder --linux",
-    "build:frontend": "cd ../frontend && BUILD_TARGET=electron npm run build"
+    "build:frontend": "cd ../frontend && npm run build"
   },
   "devDependencies": {
     "electron": "^28.0.0",
