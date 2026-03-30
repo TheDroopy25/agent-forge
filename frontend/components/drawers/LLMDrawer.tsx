@@ -646,7 +646,7 @@ export default function LLMDrawer({ open, onClose }: Props) {
               <label className="text-sm font-medium text-gray-300">Temperature</label>
               <div className="group relative">
                 <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
-                <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+                <div className="absolute right-0 bottom-full z-50 hidden group-hover:block w-72 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
                   <p className="text-xs text-gray-300 leading-relaxed">{TEMP_DESCRIPTION}</p>
                 </div>
               </div>
@@ -682,7 +682,7 @@ export default function LLMDrawer({ open, onClose }: Props) {
             <h3 className="text-sm font-semibold text-gray-300">Fallback Chain</h3>
             <div className="group relative">
               <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
-              <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+              <div className="absolute right-0 bottom-full z-50 hidden group-hover:block w-72 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
                 <p className="text-xs text-gray-300 leading-relaxed">
                   If your primary model fails, the agent automatically switches to the next one in line.
                   Primary is set to match your provider selection above. Add Fallback 1 and 2 for resilience.
