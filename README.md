@@ -6,10 +6,18 @@ Build and deploy AI agents without writing a single line of code.
 
 AgentForge is a visual AI agent builder. Design your agent on an interactive canvas, configure its brain, memory, tools, and channels — then deploy it directly to your computer with one click.
 
+## Deploy Your Own Copy
+
+Click the button below — Vercel will clone the repo and set everything up. No configuration needed.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/TheDroopy25/agent-forge&root-directory=frontend&project-name=agent-forge&framework=nextjs)
+
+> **That's it.** Vercel handles the rest. Free account at vercel.com if you don't have one.
+
 ## Two ways to use it
 
 ### 🌐 Web (agentforge.vercel.app)
-Use the visual builder to design your agent and generate config files. Download them and set up manually.
+Live demo — use the visual builder to design your agent and generate config files. To get your own hosted version, see **Deploy Your Own Copy** above.
 
 ### 🖥️ Desktop App (recommended)
 Download the app for your platform. Everything happens locally — no account needed, no cloud.
