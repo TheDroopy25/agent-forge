@@ -15,23 +15,39 @@ const DISCORD_STEPS = [
   },
   {
     title: 'Create a server',
-    body: <>In Discord, click the <strong style={{ color: '#fff' }}>"+"</strong> icon in the left sidebar → <strong style={{ color: '#fff' }}>"Create My Own"</strong> → give it a name. This is your <em>"guild."</em></>,
+    body: <>In Discord, click the <strong style={{ color: '#fff' }}>"+"</strong> icon in the left sidebar → <strong style={{ color: '#fff' }}>"Create My Own"</strong> → give it a name.</>,
+  },
+  {
+    title: 'Enable Developer Mode',
+    body: <>Go to <strong style={{ color: '#fff' }}>Settings</strong> (bottom-left gear) → <strong style={{ color: '#fff' }}>App Settings → Advanced → Developer Mode ON</strong>. You&apos;ll need this to copy IDs.</>,
   },
   {
     title: 'Create an Application',
-    body: <>Go to <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#76b900' }}>discord.com/developers/applications</span> → click <strong style={{ color: '#fff' }}>"New Application"</strong> → give it a name (e.g. "My Agent").</>,
+    body: <>Go to <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#76b900' }}>discord.com/developers/applications</span> → click <strong style={{ color: '#fff' }}>"New Application"</strong> → name it.</>,
   },
   {
     title: 'Create a Bot & copy the Token',
-    body: <>Inside your application, click <strong style={{ color: '#fff' }}>"Bot"</strong> in the left sidebar → <strong style={{ color: '#fff' }}>"Add Bot"</strong> → confirm → click <strong style={{ color: '#fff' }}>"Reset Token"</strong> → copy it. Paste it in the Bot Token field below.</>,
+    body: <><strong style={{ color: '#fff' }}>Bot</strong> tab → <strong style={{ color: '#fff' }}>"Add Bot"</strong> → confirm → <strong style={{ color: '#fff' }}>"Reset Token"</strong> → copy it → paste as Bot Token.</>,
   },
   {
     title: 'Add the bot to your server',
-    body: <>Go to <strong style={{ color: '#fff' }}>"OAuth2"</strong> → <strong style={{ color: '#fff' }}>"URL Generator"</strong> → check <strong style={{ color: '#fff' }}>"bot"</strong> under Scopes → check <strong style={{ color: '#fff' }}>"Send Messages"</strong> under Bot Permissions → copy the generated URL → open it in your browser → select your server → Authorize.</>,
+    body: <><strong style={{ color: '#fff' }}>OAuth2 → URL Generator</strong> → check <strong style={{ color: '#fff' }}>"bot"</strong> scope + <strong style={{ color: '#fff' }}>"Send Messages"</strong> permission → copy URL → open in browser → pick your server → Authorize.</>,
   },
   {
-    title: 'Get your Guild/Server ID',
-    body: <>In Discord, go to <strong style={{ color: '#fff' }}>Settings → Advanced</strong> → turn on <strong style={{ color: '#fff' }}>"Developer Mode."</strong> Then right-click your server name in the sidebar → <strong style={{ color: '#fff' }}>"Copy Server ID."</strong> Paste it in the Guild ID field below.</>,
+    title: 'Create or pick a text channel',
+    body: <>In your server, click <strong style={{ color: '#fff' }}>"+"</strong> next to Text Channels to create one (e.g. <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#76b900' }}>#agent-chat</span>), or use an existing one.</>,
+  },
+  {
+    title: 'Copy the Channel ID',
+    body: <>Right-click the channel name → <strong style={{ color: '#fff' }}>"Copy Channel ID"</strong> → paste as Channel ID below.</>,
+  },
+  {
+    title: 'Copy your Server (Guild) ID',
+    body: <>Right-click your server name in the sidebar → <strong style={{ color: '#fff' }}>"Copy Server ID"</strong> → paste as Guild ID below.</>,
+  },
+  {
+    title: 'Copy your User ID',
+    body: <>Right-click your own username anywhere in Discord → <strong style={{ color: '#fff' }}>"Copy User ID"</strong> → paste as Owner User ID below. The agent uses this to know who the owner is.</>,
   },
 ];
 
@@ -112,6 +128,30 @@ export default function ChannelsDrawer({ open, onClose }: Props) {
                     </div>
                   )}
                 </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-400">Channel ID</label>
+                  <input
+                    type="text"
+                    value={channels.discord.channelId}
+                    onChange={(e) =>
+                      setChannels({ discord: { ...channels.discord, channelId: e.target.value } })
+                    }
+                    placeholder="Channel ID (e.g. 123456789012345678)"
+                    className="w-full bg-[#12121a] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#76b900] transition-colors"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-400">Owner User ID</label>
+                  <input
+                    type="text"
+                    value={channels.discord.ownerId}
+                    onChange={(e) =>
+                      setChannels({ discord: { ...channels.discord, ownerId: e.target.value } })
+                    }
+                    placeholder="Your Discord User ID"
+                    className="w-full bg-[#12121a] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#76b900] transition-colors"
+                  />
+                </div>
                 <input
                   type="password"
                   value={channels.discord.token}
@@ -130,6 +170,13 @@ export default function ChannelsDrawer({ open, onClose }: Props) {
                   placeholder="Guild ID"
                   className="w-full bg-[#12121a] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#76b900] transition-colors"
                 />
+                {/* Talking to your agent info box */}
+                <div style={{ background: '#0d1929', border: '1px solid #1e2d3d', borderRadius: '8px', padding: '12px', color: '#8b9cb3', fontSize: '13px', lineHeight: '1.6' }}>
+                  <p style={{ margin: '0 0 6px', fontWeight: 600, color: '#8b9cb3' }}>💬 Talking to your agent</p>
+                  <p style={{ margin: '0 0 4px' }}><strong style={{ color: '#c8d8e8' }}>DM the bot:</strong> Search the bot&apos;s name in Discord&apos;s search bar → open a DM → type your message. Best for private 1-on-1 interaction.</p>
+                  <p style={{ margin: '0 0 4px' }}><strong style={{ color: '#c8d8e8' }}>Channel:</strong> Type <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#76b900' }}>@BotName</span> in your <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#76b900' }}>#agent-chat</span> channel to mention it. Anyone in the channel can interact.</p>
+                  <p style={{ margin: 0 }}><strong style={{ color: '#c8d8e8' }}>Who can talk to it:</strong> By default, anyone who can see the channel. Set guardrails if you want to restrict access.</p>
+                </div>
               </div>
             )}
           </div>

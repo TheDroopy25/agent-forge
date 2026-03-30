@@ -1,10 +1,12 @@
 import DrawerNextButton from '@/components/DrawerNextButton';
 'use client';
 
+import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
 import { useAgentStore } from '@/store/agentStore';
 import Tip from "@/components/Tip";
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 const LOG_LEVELS = ['Silent', 'Normal', 'Verbose', 'Debug'] as const;
 
@@ -24,6 +26,7 @@ interface Props {
 export default function ObservabilityDrawer({ open, onClose }: Props) {
   const observability = useAgentStore((s) => s.observability);
   const setObservability = useAgentStore((s) => s.setObservability);
+  const [showChannelIdGuide, setShowChannelIdGuide] = useState(false);
 
   return (
     <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
@@ -129,6 +132,36 @@ export default function ObservabilityDrawer({ open, onClose }: Props) {
             placeholder="#agent-alerts channel ID"
             className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#76b900] transition-colors"
           />
+          {/* Collapsible How to get a Channel ID guide */}
+          <div style={{ background: '#0d1929', border: '1px solid #1e2d3d', borderRadius: '8px', overflow: 'hidden' }}>
+            <button
+              type="button"
+              onClick={() => setShowChannelIdGuide((v) => !v)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'transparent', border: 'none', cursor: 'pointer' }}
+            >
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#8b9cb3', letterSpacing: '0.02em' }}>How to get a Channel ID</span>
+              {showChannelIdGuide
+                ? <ChevronUp size={14} style={{ color: '#8b9cb3', flexShrink: 0 }} />
+                : <ChevronDown size={14} style={{ color: '#8b9cb3', flexShrink: 0 }} />}
+            </button>
+            {showChannelIdGuide && (
+              <div style={{ padding: '0 12px 12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {[
+                  { title: 'Enable Developer Mode', body: <>In Discord, go to <strong style={{ color: '#fff' }}>Settings → Advanced</strong> → turn on <strong style={{ color: '#fff' }}>Developer Mode</strong> (if not already on).</> },
+                  { title: 'Copy the Channel ID', body: <>Right-click any channel name in your server → <strong style={{ color: '#fff' }}>&quot;Copy Channel ID&quot;</strong>.</> },
+                  { title: 'Paste it above', body: <>Paste it in the field above.</> },
+                ].map((step, i) => (
+                  <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                    <span style={{ flexShrink: 0, width: '20px', height: '20px', borderRadius: '50%', background: '#76b900', color: '#000', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '1px' }}>{i + 1}</span>
+                    <div>
+                      <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, color: '#fff', lineHeight: '1.4' }}>{step.title}</p>
+                      <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#8b9cb3', lineHeight: '1.5' }}>{step.body}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="border-t border-[#1e2d3d]" />

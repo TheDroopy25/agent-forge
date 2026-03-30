@@ -73,7 +73,7 @@ export interface AgentState {
 
   // Channels
   channels: {
-    discord: { enabled: boolean; token: string; guildId: string; channelId: string };
+    discord: { enabled: boolean; token: string; guildId: string; channelId: string; ownerId: string };
     cliOnly: boolean;
     primaryChannel: string;
   };
@@ -86,6 +86,7 @@ export interface AgentState {
     tokenBudget: number;
     hardStopPath: string;
     maxToolCalls: number;
+    discordAlertChannel: string;
   };
 
   // Observability
@@ -261,7 +262,7 @@ const defaultSkills: AgentState['skills'] = {
 };
 
 const defaultChannels: AgentState['channels'] = {
-  discord: { enabled: false, token: '', guildId: '', channelId: '' },
+  discord: { enabled: false, token: '', guildId: '', channelId: '', ownerId: '' },
   cliOnly: false,
   primaryChannel: 'cli',
 };
@@ -273,6 +274,7 @@ const defaultGuardrails: AgentState['guardrails'] = {
   tokenBudget: 100000,
   hardStopPath: '~/.openclaw/workspace/STOP',
   maxToolCalls: 20,
+  discordAlertChannel: '',
 };
 
 const defaultObservability: AgentState['observability'] = {
