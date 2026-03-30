@@ -25,9 +25,6 @@ function buildTemplates(store: ReturnType<typeof useAgentStore.getState>): Templ
       desc: 'Answers questions, manages tasks, sends emails',
       apply: () => {
         store.setIdentity({ purpose: 'A helpful personal assistant that answers questions, manages tasks, and helps with daily work' });
-        store.setLLM({ provider: 'anthropic', model: 'claude-3-5-sonnet-20241022' });
-        store.setTools({ webSearch: true, email: true, calendar: true });
-        store.setChannels({ restApi: { ...store.channels.restApi, enabled: true } });
       },
     },
     {
@@ -36,9 +33,6 @@ function buildTemplates(store: ReturnType<typeof useAgentStore.getState>): Templ
       desc: 'Hangs out in your Discord server, helps your community',
       apply: () => {
         store.setIdentity({ purpose: 'A friendly Discord bot that helps server members with questions and keeps conversations going' });
-        store.setLLM({ provider: 'openai', model: 'gpt-4o' });
-        store.setChannels({ discord: { ...store.channels.discord, enabled: true } });
-        store.setTools({ webSearch: true });
       },
     },
     {
@@ -47,9 +41,6 @@ function buildTemplates(store: ReturnType<typeof useAgentStore.getState>): Templ
       desc: 'Drafts posts, tracks trends, manages your presence',
       apply: () => {
         store.setIdentity({ purpose: 'A social media manager that drafts engaging posts, monitors trends, and helps grow your online presence' });
-        store.setLLM({ provider: 'anthropic', model: 'claude-3-5-sonnet-20241022' });
-        store.setTools({ webSearch: true, browserControl: true });
-        store.setMemory({ longTerm: { enabled: true, vectorStore: 'chroma' } });
       },
     },
     {
@@ -58,10 +49,6 @@ function buildTemplates(store: ReturnType<typeof useAgentStore.getState>): Templ
       desc: 'Answers customer questions 24/7 about your business',
       apply: () => {
         store.setIdentity({ purpose: 'A customer support agent that answers questions about the business, helps resolve issues, and escalates when needed' });
-        store.setLLM({ provider: 'openai', model: 'gpt-4o-mini' });
-        store.setTools({ webSearch: false, email: true });
-        store.setChannels({ restApi: { ...store.channels.restApi, enabled: true } });
-        store.setGuardrails({ neverDo: ['share internal pricing', 'make promises without manager approval'] });
       },
     },
     {
@@ -70,9 +57,6 @@ function buildTemplates(store: ReturnType<typeof useAgentStore.getState>): Templ
       desc: 'Reads articles, summarizes documents, finds information',
       apply: () => {
         store.setIdentity({ purpose: 'A research assistant that reads documents, summarizes articles, finds information, and synthesizes knowledge on any topic' });
-        store.setLLM({ provider: 'google', model: 'gemini-2.0-flash' });
-        store.setTools({ webSearch: true, pdfReader: true, browserControl: true });
-        store.setMemory({ longTerm: { enabled: true, vectorStore: 'chroma' } });
       },
     },
     {
