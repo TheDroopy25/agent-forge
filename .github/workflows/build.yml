@@ -1,0 +1,95 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            build_cmd: npm run build:mac
+            artifact_pattern: "electron/dist/*.dmg"
+            artifact_name: AgentForge-mac
+          - os: windows-latest
+            build_cmd: npm run build:win
+            artifact_pattern: "electron/dist/*.exe"
+            artifact_name: AgentForge-win
+          - os: ubuntu-latest
+            build_cmd: npm run build:linux
+            artifact_pattern: "electron/dist/*.AppImage"
+            artifact_name: AgentForge-linux
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: |
+            frontend/package-lock.json
+            electron/package-lock.json
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install electron deps
+        working-directory: electron
+        run: npm ci
+
+      - name: Build (${{ matrix.os }})
+        working-directory: electron
+        run: ${{ matrix.build_cmd }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_pattern }}
+          if-no-files-found: warn
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
+          body: |
+            ## Download AgentForge
+
+            | Platform | Download |
+            |----------|----------|
+            | 🍎 Mac (Intel + Apple Silicon) | Download the `.dmg` file below |
+            | 🪟 Windows | Download the `.exe` file below |
+            | 🐧 Linux | Download the `.AppImage` file below |
+
+            > **First time?** You'll also need [Node.js](https://nodejs.org) installed on your computer. AgentForge will walk you through it if you don't have it yet.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -6,10 +6,11 @@
   "scripts": {
     "start": "electron .",
     "dev": "ELECTRON_IS_DEV=1 electron .",
-    "build": "cd ../frontend && next build && cd ../electron && electron-builder",
-    "build:mac": "cd ../frontend && next build && cd ../electron && electron-builder --mac",
-    "build:win": "cd ../frontend && next build && cd ../electron && electron-builder --win",
-    "build:linux": "cd ../frontend && next build && cd ../electron && electron-builder --linux"
+    "build": "npm run build:frontend && electron-builder",
+    "build:mac": "npm run build:frontend && electron-builder --mac",
+    "build:win": "npm run build:frontend && electron-builder --win",
+    "build:linux": "npm run build:frontend && electron-builder --linux",
+    "build:frontend": "cd ../frontend && BUILD_TARGET=electron npm run build"
   },
   "devDependencies": {
     "electron": "^28.0.0",
@@ -29,16 +30,13 @@
       "../frontend/out/**/*"
     ],
     "mac": {
-      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
-      "icon": "icons/icon.icns"
+      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }]
     },
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
-      "icon": "icons/icon.ico"
+      "target": [{ "target": "nsis", "arch": ["x64"] }]
     },
     "linux": {
-      "target": [{ "target": "AppImage", "arch": ["x64", "arm64"] }],
-      "icon": "icons/icon.png"
+      "target": [{ "target": "AppImage", "arch": ["x64", "arm64"] }]
     }
   }
 }

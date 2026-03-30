@@ -2,6 +2,12 @@
 
 Build and deploy AI agents without writing a single line of code.
 
+## Download
+
+**[⬇️ Download AgentForge →](https://agentforge.vercel.app/download.html)**
+
+Available for Mac, Windows, and Linux. The app will guide you through the rest.
+
 ## What is it?
 
 AgentForge is a visual AI agent builder. Design your agent on an interactive canvas, configure its brain, memory, tools, and channels — then deploy it directly to your computer with one click.
