@@ -22,7 +22,7 @@ function Tip({ text }: { text: string }) {
   return (
     <div className="group relative">
       <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
-      <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+      <div className="absolute right-0 bottom-full z-50 hidden group-hover:block w-72 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
         <p className="text-xs text-gray-300 leading-relaxed">{text}</p>
       </div>
     </div>
@@ -213,37 +213,7 @@ export default function MemoryDrawer({ open, onClose }: Props) {
           )}
         </div>
 
-        {/* External Database */}
-        <div className="border border-[#1e2d3d] rounded-lg overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-white">External Database</p>
-                <Tip text="Connect to a Postgres, MySQL, or Redis database. Agent can query and write structured data. Performance: depends on your DB. Resource: DB connection overhead. Requires connection string." />
-              </div>
-              <p className="text-xs text-gray-500">Connect external DB</p>
-            </div>
-            <Switch
-              checked={memory.externalDb.enabled}
-              onCheckedChange={(checked) =>
-                setMemory({ externalDb: { ...memory.externalDb, enabled: checked } })
-              }
-            />
-          </div>
-          {memory.externalDb.enabled && (
-            <div className="px-4 pb-4 border-t border-[#1e2d3d] pt-3">
-              <input
-                type="password"
-                value={memory.externalDb.connectionString}
-                onChange={(e) =>
-                  setMemory({ externalDb: { ...memory.externalDb, connectionString: e.target.value } })
-                }
-                placeholder="postgresql://user:pass@host:5432/db"
-                className={inputClass}
-              />
-            </div>
-          )}
-        </div>
+
       <DrawerNextButton />
       </SheetContent>
     </Sheet>

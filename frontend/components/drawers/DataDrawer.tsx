@@ -12,7 +12,7 @@ function Tip({ text }: { text: string }) {
   return (
     <div className="group relative">
       <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
-      <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+      <div className="absolute right-0 bottom-full z-50 hidden group-hover:block w-72 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
         <p className="text-xs text-gray-300 leading-relaxed">{text}</p>
       </div>
     </div>
@@ -248,7 +248,7 @@ export default function DataDrawer({ open, onClose }: Props) {
                 <span>Structured</span>
                 <div className="group relative" onClick={(e) => e.stopPropagation()}>
                   <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d]/60 text-gray-400 text-xs cursor-help select-none">?</span>
-                  <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+                  <div className="absolute right-0 bottom-full z-50 hidden group-hover:block w-72 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
                     <p className="text-xs text-gray-300 leading-relaxed">Agent treats data as tables, rows, and columns — better for CSV, spreadsheets, databases. More precise queries, less flexible. Best for analytical tasks.</p>
                   </div>
                 </div>
@@ -266,7 +266,7 @@ export default function DataDrawer({ open, onClose }: Props) {
                 <span>Unstructured</span>
                 <div className="group relative" onClick={(e) => e.stopPropagation()}>
                   <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d]/60 text-gray-400 text-xs cursor-help select-none">?</span>
-                  <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
+                  <div className="absolute right-0 bottom-full z-50 hidden group-hover:block w-72 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
                     <p className="text-xs text-gray-300 leading-relaxed">Agent treats data as freeform text — better for PDFs, articles, notes. More flexible, less precise. Best for research and writing tasks.</p>
                   </div>
                 </div>

@@ -76,7 +76,7 @@ function Tip({ text }: { text: string }) {
   return (
     <div className="group relative">
       <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
-      <div className="absolute left-0 bottom-full z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl" style={{ marginBottom: 6 }}>
+      <div className="absolute right-0 bottom-full z-50 hidden group-hover:block w-72 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl" style={{ marginBottom: 6 }}>
         <p className="text-xs text-gray-300 leading-relaxed">{text}</p>
       </div>
     </div>
@@ -209,7 +209,7 @@ export default function VoiceDrawer({ open, onClose }: Props) {
                       <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                         <div className="group relative">
                           <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
-                          <div className="absolute left-0 top-full z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl" style={{ marginTop: 4 }}>
+                          <div className="absolute right-0 bottom-full z-50 hidden group-hover:block w-72 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl" style={{ marginTop: 4 }}>
                             <p className="text-xs text-gray-300 leading-relaxed">{PROVIDER_TOOLTIPS[p.id]}</p>
                           </div>
                         </div>

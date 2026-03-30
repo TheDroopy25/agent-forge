@@ -259,10 +259,10 @@ const defaultVoice: AgentState['voice'] = {
 };
 
 const defaultMemory: AgentState['memory'] = {
-  shortTerm: { enabled: false, turns: 10 },
-  longTerm: { enabled: false, vectorStore: 'chromadb' },
-  episodic: { enabled: false, filePath: '' },
-  workingMemory: { enabled: false, filePath: '' },
+  shortTerm: { enabled: true, turns: 50 },
+  longTerm: { enabled: true, vectorStore: 'chromadb' },
+  episodic: { enabled: true, filePath: '' },
+  workingMemory: { enabled: true, filePath: '' },
   externalDb: { enabled: false, connectionString: '' },
 };
 
