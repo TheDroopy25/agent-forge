@@ -7,14 +7,6 @@ import { Switch } from '@/components/ui/switch';
 import { useAgentStore } from '@/store/agentStore';
 import Tip from "@/components/Tip";
 
-const VECTOR_STORES = ['chromadb', 'pinecone', 'weaviate', 'pgvector'];
-
-const VECTOR_STORE_TOOLTIPS: Record<string, string> = {
-  chromadb: 'Free, runs locally on your machine. Zero cost, some setup. Best for personal use or small teams.',
-  pinecone: 'Cloud-hosted vector DB. Free tier: 1 index, 100K vectors. Scales well. Requires API key. Best for production deployments.',
-  weaviate: 'Open-source, can self-host or use cloud. Supports multi-modal (text + images). More complex setup than ChromaDB.',
-  pgvector: 'PostgreSQL extension — store vectors in your existing Postgres DB. Best if you already run Postgres. Requires database admin access.',
-};
 
 const inputClass =
   'w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#76b900] transition-colors';
@@ -96,9 +88,9 @@ export default function MemoryDrawer({ open, onClose }: Props) {
             <div>
               <div className="flex items-center gap-2">
                 <p className="text-sm font-medium text-white">Long-term Memory</p>
-                <Tip text="Semantic search over past conversations and documents. Agent can recall relevant info from months ago. Requires a vector database (ChromaDB is free/local). Performance: adds 100-300ms per query for retrieval. Resource: moderate CPU + disk for embeddings." />
+                <Tip text="Your agent keeps a MEMORY.md file — a curated summary of important things it has learned about you. It reads this file every session so it never forgets the big stuff. This is exactly how Batch remembers everything about Brent." />
               </div>
-              <p className="text-xs text-gray-500">Persistent vector storage</p>
+              <p className="text-xs text-gray-500">MEMORY.md — reads it every session</p>
             </div>
             <Switch
               checked={memory.longTerm.enabled}
@@ -108,33 +100,10 @@ export default function MemoryDrawer({ open, onClose }: Props) {
             />
           </div>
           {memory.longTerm.enabled && (
-            <div className="px-4 pb-4 border-t border-[#1e2d3d]">
-              <p className="text-xs text-gray-400 pt-3 mb-2">Vector Store</p>
-              <div className="grid grid-cols-2 gap-2">
-                {VECTOR_STORES.map((store) => (
-                  <button
-                    key={store}
-                    onClick={() =>
-                      setMemory({ longTerm: { ...memory.longTerm, vectorStore: store } })
-                    }
-                    className={`px-3 py-2 rounded-md border text-sm font-medium transition-all ${
-                      memory.longTerm.vectorStore === store
-                        ? 'border-[#76b900] bg-[#76b900]/10 text-[#76b900]'
-                        : 'border-[#1e2d3d] bg-[#1a1a2e] text-gray-300 hover:border-[#76b900]/40'
-                    }`}
-                  >
-                    <span className="flex items-center justify-between w-full gap-1">
-                      <span>{store}</span>
-                      <div className="group relative" onClick={(e) => e.stopPropagation()}>
-                        <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
-                        <div className="absolute right-0 top-5 z-50 hidden group-hover:block w-64 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
-                          <p className="text-xs text-gray-300 leading-relaxed">{VECTOR_STORE_TOOLTIPS[store]}</p>
-                        </div>
-                      </div>
-                    </span>
-                  </button>
-                ))}
-              </div>
+            <div className="px-4 pb-4 border-t border-[#1e2d3d] pt-3">
+              <p className="text-xs text-gray-400 leading-relaxed">
+                Your agent will maintain a <span className="text-white font-medium">MEMORY.md</span> file in its workspace. At the start of every session it reads this file — so it remembers your preferences, your projects, and the things that matter to you. No database required.
+              </p>
             </div>
           )}
         </div>
