@@ -15,8 +15,9 @@ const SECTION_LABELS: Record<string, string> = {
 };
 
 export default function DrawerNextButton() {
-  const activeDrawer   = useAgentStore((s) => s.activeDrawer);
+  const activeDrawer    = useAgentStore((s) => s.activeDrawer);
   const setActiveDrawer = useAgentStore((s) => s.setActiveDrawer);
+  const markVisited     = useAgentStore((s) => s.markVisited);
 
   const currentIndex = STEP_ORDER.indexOf(activeDrawer as typeof STEP_ORDER[number]);
   const nextSection  = currentIndex >= 0 && currentIndex < STEP_ORDER.length - 1
@@ -28,7 +29,7 @@ export default function DrawerNextButton() {
   return (
     <div style={{ borderTop: '1px solid #1e2d3d', paddingTop: 16, marginTop: 8 }}>
       <button
-        onClick={() => setActiveDrawer(nextSection)}
+        onClick={() => { markVisited(activeDrawer as string); setActiveDrawer(nextSection); }}
         style={{
           width: '100%',
           background: 'linear-gradient(135deg, #76b900, #5a8c00)',
