@@ -35,9 +35,12 @@ const PROVIDERS: Provider[] = [
     authType: 'oauth',
     apiKeyUrl: 'https://platform.openai.com/api-keys',
     apiKeySteps: [
-      'Sign up at platform.openai.com',
-      'Go to API Keys → Create new secret key',
-      'Paste it here — new accounts get $5 free credit',
+      'Go to platform.openai.com and sign in (or create a free account)',
+      'Click your profile icon in the top-right corner',
+      'Select "API keys" from the menu',
+      'Click "Create new secret key" — give it any name',
+      'Copy the key immediately — you will NOT be able to see it again',
+      'Paste it in the box below',
     ],
   },
   {
@@ -48,10 +51,12 @@ const PROVIDERS: Provider[] = [
     freeNote: '✅ Uses your Claude.ai subscription ($20/mo) — no per-token billing',
     authType: 'setup-token',
     setupTokenSteps: [
-      'Open a terminal on your computer',
-      'Run this command: claude setup-token',
+      'First, make sure Claude Code is installed on your computer (it came with OpenClaw)',
+      'Open Terminal: press Cmd+Space, type "Terminal", press Enter (on Mac) — or search "Terminal" in your Start menu (on Windows)',
+      'Type this exactly and press Enter: claude setup-token',
       'A browser window will open — sign in to your Claude.ai account',
-      'Copy the token that appears in your terminal',
+      'When the browser closes, look back at your Terminal window',
+      'You will see a long code starting with "sk-" — copy the entire thing',
       'Paste it in the box below',
     ],
   },
@@ -63,10 +68,12 @@ const PROVIDERS: Provider[] = [
     freeNote: '✅ Free — 1,500 requests/day on Gemini 2.0 Flash',
     apiKeyUrl: 'https://aistudio.google.com/app/apikey',
     apiKeySteps: [
-      'Google AI Studio just opened in a new tab',
-      'Sign in with your Google account if prompted',
-      'Click "Get API key" → "Create API key in new project"',
-      'Copy the key and paste it below — free tier works immediately',
+      'Google AI Studio just opened in a new tab — switch to that tab now',
+      'If asked, sign in with your Google account (the same one you use for Gmail)',
+      'Click the blue "Create API key" button',
+      'Select "Create API key in new project"',
+      'Your key will appear — click the copy icon next to it',
+      'Come back to this tab and paste it in the box below',
     ],
     supportsOAuth: true,
     oauthProvider: 'google',
@@ -80,9 +87,12 @@ const PROVIDERS: Provider[] = [
     freeNote: '✅ Free tier — 1,000 req/month',
     apiKeyUrl: 'https://build.nvidia.com/explore/discover',
     apiKeySteps: [
-      'Sign up at build.nvidia.com → NVIDIA account',
-      'Browse models → click any → "Get API Key"',
-      'Free tier: 1,000 requests/month per model',
+      'Go to build.nvidia.com and click "Sign In" (top right) — create a free account if you do not have one',
+      'Once logged in, click any model (for example "Llama 3.1")',
+      'Look for "Get API Key" button — click it',
+      'Click "Generate Personal Key"',
+      'Copy the key (starts with "nvapi-")',
+      'Paste it in the box below',
     ],
     authType: 'apikey',
   },
@@ -152,6 +162,7 @@ export default function LLMDrawer({ open, onClose }: Props) {
   const [authModes, setAuthModes] = useState<Record<string, AuthMode>>({});
   const [oauthClientIds, setOAuthClientIds] = useState<Record<string, string>>({});
   const [setupOpen, setSetupOpen] = useState<string | null>(null);
+  const [fallbackAuthOpen, setFallbackAuthOpen] = useState<Record<number, boolean>>({});
 
   // Load saved auth from localStorage on mount
   useEffect(() => {
@@ -194,6 +205,14 @@ export default function LLMDrawer({ open, onClose }: Props) {
     if (authModes[providerId]) return authModes[providerId];
     const p = PROVIDERS.find((x) => x.id === providerId);
     return (p?.authType as AuthMode) ?? 'apikey';
+  }
+
+  function isProviderConnected(providerId: string): boolean {
+    const p = PROVIDERS.find((x) => x.id === providerId);
+    if (!p) return false;
+    if (p.authType === 'oauth' && p.oauthProvider) return !!oauthTokens[p.oauthProvider];
+    if (p.authType === 'setup-token') return !!setupTokens[p.id];
+    return !!apiKeys[p.id];
   }
 
   function handleProviderSelect(id: string) {
@@ -304,7 +323,7 @@ export default function LLMDrawer({ open, onClose }: Props) {
         ) : (
           <div className="space-y-3">
             <p className="text-xs text-gray-400 leading-relaxed">
-              Sign in with your ChatGPT account to authorize access. No API key needed — one click and you&apos;re done.
+              This uses your ChatGPT Plus subscription ($20/mo) — no extra charges. Click the button below to sign in.
             </p>
             <button
               onClick={async () => {
@@ -545,6 +564,7 @@ export default function LLMDrawer({ open, onClose }: Props) {
           className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900] transition-colors"
         />
         {apiKeys[p.id] && <p className="text-xs text-[#76b900]">✓ Key saved</p>}
+        <p className="text-xs text-gray-500">Free tier includes 1,000 requests/month. No credit card required.</p>
         {p.apiKeyUrl && (
           <a href={p.apiKeyUrl} target="_blank" rel="noreferrer" className="text-xs text-[#00d4ff] hover:underline">
             → Get your API key at {p.apiKeyUrl.replace('https://', '')}
@@ -562,6 +582,129 @@ export default function LLMDrawer({ open, onClose }: Props) {
       case 'nvidia':    return renderNvidiaPanel(p);
       default:          return null;
     }
+  }
+
+  // ── Compact auth panel for fallback rows ───────────────────────────────────
+
+  function renderCompactAuthPanel(providerId: string) {
+    const p = PROVIDERS.find((x) => x.id === providerId);
+    if (!p) return null;
+
+    const connected = isProviderConnected(providerId);
+
+    if (connected) {
+      return (
+        <p className="text-xs text-[#76b900] py-1">✅ Already connected</p>
+      );
+    }
+
+    // Amber warning note
+    const warningNote = (
+      <p className="text-xs text-amber-400 leading-relaxed">
+        ⚠️ Optional — only needed if your primary model goes down
+      </p>
+    );
+
+    if (p.authType === 'setup-token') {
+      const token = setupTokens[p.id] ?? '';
+      return (
+        <div className="space-y-2">
+          {warningNote}
+          {p.setupTokenSteps && (
+            <ol className="space-y-1">
+              {p.setupTokenSteps.map((step, i) => (
+                <li key={i} className="text-xs text-gray-500 flex gap-2">
+                  <span className="text-[#76b900] font-bold shrink-0">{i + 1}.</span>
+                  {step}
+                </li>
+              ))}
+            </ol>
+          )}
+          <input
+            type="password"
+            placeholder="Paste your setup token here"
+            value={token}
+            onChange={(e) => {
+              const val = e.target.value;
+              setSetupTokens((prev) => ({ ...prev, [p.id]: val }));
+              if (val) saveAuthToStorage(p.id, { authType: 'setup-token', token: val });
+              else clearAuthFromStorage(p.id);
+            }}
+            className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900] transition-colors"
+          />
+          {token && <p className="text-xs text-[#76b900]">✓ Token saved</p>}
+        </div>
+      );
+    }
+
+    if (p.authType === 'oauth') {
+      // For compact fallback, show API key option (simpler than OAuth redirect flow)
+      const steps = p.apiKeySteps;
+      const apiKey = apiKeys[p.id] ?? '';
+      const isGoogle = p.id === 'google';
+      return (
+        <div className="space-y-2">
+          {warningNote}
+          {steps && (
+            <ol className="space-y-1">
+              {steps.map((step, i) => (
+                <li key={i} className="text-xs text-gray-500 flex gap-2">
+                  <span className="text-[#76b900] font-bold shrink-0">{i + 1}.</span>
+                  {step}
+                </li>
+              ))}
+            </ol>
+          )}
+          <input
+            type="password"
+            placeholder={isGoogle ? 'Paste your Google API key' : 'Paste your OpenAI API key'}
+            value={apiKey}
+            onChange={(e) => {
+              const val = e.target.value;
+              setApiKeys((prev) => ({ ...prev, [p.id]: val }));
+              if (val) saveAuthToStorage(p.id, { authType: 'apikey', token: val });
+              else clearAuthFromStorage(p.id);
+            }}
+            className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900] transition-colors"
+          />
+          {apiKey && <p className="text-xs text-[#76b900]">✓ Key saved</p>}
+        </div>
+      );
+    }
+
+    // apikey
+    const apiKey = apiKeys[p.id] ?? '';
+    return (
+      <div className="space-y-2">
+        {warningNote}
+        {p.apiKeySteps && (
+          <ol className="space-y-1">
+            {p.apiKeySteps.map((step, i) => (
+              <li key={i} className="text-xs text-gray-500 flex gap-2">
+                <span className="text-[#76b900] font-bold shrink-0">{i + 1}.</span>
+                {step}
+              </li>
+            ))}
+          </ol>
+        )}
+        <input
+          type="password"
+          placeholder={`Paste your ${p.name} API key`}
+          value={apiKey}
+          onChange={(e) => {
+            const val = e.target.value;
+            setApiKeys((prev) => ({ ...prev, [p.id]: val }));
+            if (val) saveAuthToStorage(p.id, { authType: 'apikey', token: val });
+            else clearAuthFromStorage(p.id);
+          }}
+          className="w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#76b900] transition-colors"
+        />
+        {apiKey && <p className="text-xs text-[#76b900]">✓ Key saved</p>}
+        {p.id === 'nvidia' && (
+          <p className="text-xs text-gray-500">Free tier includes 1,000 requests/month. No credit card required.</p>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -696,6 +839,11 @@ export default function LLMDrawer({ open, onClose }: Props) {
 
           {fallbackRows.map((row, i) => {
             const rowModels = MODELS[row.provider] ?? [];
+            const isFallback = i >= 1;
+            const showAuthPrompt = isFallback && !!row.provider && row.provider !== llm.provider;
+            const isAuthOpen = fallbackAuthOpen[i] ?? false;
+            const providerInfo = PROVIDERS.find((p) => p.id === row.provider);
+
             return (
               <div key={i} className="space-y-1">
                 <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{rowLabels[i]}</span>
@@ -733,6 +881,30 @@ export default function LLMDrawer({ open, onClose }: Props) {
                     ))}
                   </select>
                 </div>
+
+                {/* Collapsible auth prompt for Fallback 1 / Fallback 2 */}
+                {showAuthPrompt && providerInfo && (
+                  <div className="mt-1">
+                    <button
+                      onClick={() => setFallbackAuthOpen((prev) => ({ ...prev, [i]: !prev[i] }))}
+                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                    >
+                      <span
+                        className="inline-block transition-transform duration-150"
+                        style={{ transform: isAuthOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                      >
+                        ▶
+                      </span>
+                      Optional: Connect {providerInfo.name} ↓
+                    </button>
+
+                    {isAuthOpen && (
+                      <div className="mt-2 rounded-md border border-[#1e2d3d] bg-[#0e0e1a] p-3">
+                        {renderCompactAuthPanel(row.provider)}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
