@@ -37,6 +37,10 @@ function createWindow() {
       // Fallback: show an error page so it's not just a black screen
       mainWindow.loadURL(`data:text/html,<h2 style="font-family:sans-serif;padding:40px;color:#e2e8f0;background:#0a0a0f;margin:0">Could not load AgentForge UI.<br><small style="color:#666">${indexPath}</small></h2>`);
     });
+    // Temporary: open devtools to debug rendering issues
+    mainWindow.webContents.on('did-finish-load', () => {
+      mainWindow.webContents.openDevTools({ mode: 'detach' });
+    });
   }
 
   mainWindow.on('closed', () => {

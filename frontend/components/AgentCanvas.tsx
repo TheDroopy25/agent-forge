@@ -108,7 +108,7 @@ function AgentCanvasInner() {
   }, [sectionComplete]);
 
   return (
-    <div style={{ width: '100%', height: '100%', background: '#0a0a0f' }}>
+    <div style={{ width: '100%', height: '100%', minHeight: '400px', background: '#0a0a0f' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
