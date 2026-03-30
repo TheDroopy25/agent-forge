@@ -4,19 +4,9 @@ import DrawerNextButton from '@/components/DrawerNextButton';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Slider } from '@/components/ui/slider';
 import { useAgentStore } from '@/store/agentStore';
+import Tip from "@/components/Tip";
 
 const AVATARS = ['🤖', '🧠', '⚡', '🔮', '🦾', '🌟', '🚀', '🎯', '💎', '🔥', '🌊', '🦁', '🐉', '🎭', '🌈', '⚙️', '🛸', '🎪', '🔬', '🏆'];
-
-function Tip({ text }: { text: string }) {
-  return (
-    <div className="group relative">
-      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
-      <div className="absolute right-0 bottom-full z-50 hidden group-hover:block w-72 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
-        <p className="text-xs text-gray-300 leading-relaxed">{text}</p>
-      </div>
-    </div>
-  );
-}
 
 interface SliderRowProps {
   label: string;

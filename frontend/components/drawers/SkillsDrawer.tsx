@@ -14,16 +14,7 @@ interface SkillDefinition {
   icon: string;
 }
 
-function Tip({ text }: { text: string }) {
-  return (
-    <div className="group relative">
-      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
-      <div className="absolute left-1/2 -translate-x-1/2 top-5 z-50 hidden group-hover:block w-56 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
-        <p className="text-xs text-gray-300 leading-relaxed">{text}</p>
-      </div>
-    </div>
-  );
-}
+import Tip from "@/components/Tip";
 
 const SKILL_TOOLTIPS: Record<string, string> = {
   discord: 'Connects to Discord — read/send messages, manage channels, react, create threads. Requires a bot token. Resource: persistent WebSocket connection (~5MB RAM).',

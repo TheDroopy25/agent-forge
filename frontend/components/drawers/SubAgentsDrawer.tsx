@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { useAgentStore } from '@/store/agentStore';
+import Tip from "@/components/Tip";
 
 const MODEL_OPTIONS = [
   'claude-sonnet-4-6',
@@ -28,17 +29,6 @@ const ROLE_TOOLTIPS: Record<string, string> = {
   'Coordinator': 'This agent manages and delegates — it breaks tasks into pieces and assigns them to sub-agents. Higher intelligence requirement; uses more tokens for planning.',
   'Worker': 'This agent executes specific tasks assigned by a coordinator. Simpler, cheaper, faster. Use this if this agent will be a sub-agent of another.',
 };
-
-function Tip({ text }: { text: string }) {
-  return (
-    <div className="group relative">
-      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
-      <div className="absolute right-0 bottom-full z-50 hidden group-hover:block w-72 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl">
-        <p className="text-xs text-gray-300 leading-relaxed">{text}</p>
-      </div>
-    </div>
-  );
-}
 
 interface Props {
   open: boolean;

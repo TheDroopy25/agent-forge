@@ -72,16 +72,7 @@ const ELEVENLABS_STYLE_SETTINGS: Record<string, { stability: number; style: numb
 const selectClass =
   'w-full bg-[#1a1a2e] border border-[#1e2d3d] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-[#76b900] transition-colors';
 
-function Tip({ text }: { text: string }) {
-  return (
-    <div className="group relative">
-      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[#1e2d3d] text-gray-400 text-xs cursor-help select-none">?</span>
-      <div className="absolute right-0 bottom-full z-50 hidden group-hover:block w-72 rounded-lg bg-[#0e0e1a] border border-[#1e2d3d] p-3 shadow-xl" style={{ marginBottom: 6 }}>
-        <p className="text-xs text-gray-300 leading-relaxed">{text}</p>
-      </div>
-    </div>
-  );
-}
+import Tip from "@/components/Tip";
 
 // Play audio blob at a custom speed using Web Audio API
 async function playWithSpeed(blob: Blob, speed: number, onEnded: () => void) {
