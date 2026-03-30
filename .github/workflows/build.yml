@@ -49,7 +49,7 @@ jobs:
 
       - name: Install electron deps
         working-directory: electron
-        run: npm ci
+        run: npm install
 
       - name: Build (${{ matrix.os }})
         working-directory: electron
