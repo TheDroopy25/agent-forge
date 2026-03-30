@@ -22,7 +22,9 @@
   "build": {
     "appId": "com.agentforge.app",
     "productName": "AgentForge",
-    "directories": { "output": "dist" },
+    "directories": {
+      "output": "dist"
+    },
     "files": [
       "main.js",
       "preload.js",
@@ -30,13 +32,40 @@
       "../frontend/out/**/*"
     ],
     "mac": {
-      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }]
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
     },
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }]
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
     },
     "linux": {
-      "target": [{ "target": "AppImage", "arch": ["x64", "arm64"] }]
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
     }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TheDroopy25/agent-forge.git"
   }
 }
