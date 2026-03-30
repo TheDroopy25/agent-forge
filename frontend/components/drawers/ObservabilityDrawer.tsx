@@ -61,7 +61,7 @@ export default function ObservabilityDrawer({ open, onClose }: Props) {
             </label>
             <Tip text="Controls how much detail the agent writes to logs. Silent = no logs. Normal = key events only. Verbose = all decisions and tool calls. Debug = everything including internal state. More logging = slightly higher disk/CPU overhead." />
           </div>
-          <div className="flex rounded-md overflow-hidden border border-[#1e2d3d]">
+          <div className="flex rounded-md border border-[#1e2d3d]">
             {LOG_LEVELS.map((level) => {
               const value = level.toLowerCase();
               const active = observability.logLevel === value;

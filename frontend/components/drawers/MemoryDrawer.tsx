@@ -57,7 +57,7 @@ export default function MemoryDrawer({ open, onClose }: Props) {
         </div>
 
         {/* Short-term Memory */}
-        <div className="border border-[#1e2d3d] rounded-lg overflow-hidden">
+        <div className="border border-[#1e2d3d] rounded-lg">
           <div className="flex items-center justify-between px-4 py-3">
             <div>
               <div className="flex items-center gap-2">
@@ -101,7 +101,7 @@ export default function MemoryDrawer({ open, onClose }: Props) {
         </div>
 
         {/* Long-term Memory */}
-        <div className="border border-[#1e2d3d] rounded-lg overflow-hidden">
+        <div className="border border-[#1e2d3d] rounded-lg">
           <div className="flex items-center justify-between px-4 py-3">
             <div>
               <div className="flex items-center gap-2">
@@ -150,7 +150,7 @@ export default function MemoryDrawer({ open, onClose }: Props) {
         </div>
 
         {/* Episodic Memory */}
-        <div className="border border-[#1e2d3d] rounded-lg overflow-hidden">
+        <div className="border border-[#1e2d3d] rounded-lg">
           <div className="flex items-center justify-between px-4 py-3">
             <div>
               <div className="flex items-center gap-2">
@@ -182,7 +182,7 @@ export default function MemoryDrawer({ open, onClose }: Props) {
         </div>
 
         {/* Working Memory */}
-        <div className="border border-[#1e2d3d] rounded-lg overflow-hidden">
+        <div className="border border-[#1e2d3d] rounded-lg">
           <div className="flex items-center justify-between px-4 py-3">
             <div>
               <div className="flex items-center gap-2">
