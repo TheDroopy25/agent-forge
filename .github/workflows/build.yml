@@ -51,6 +51,10 @@ jobs:
         working-directory: electron
         run: npm install
 
+      - name: Remove server-only API routes (incompatible with static export)
+        shell: bash
+        run: rm -rf frontend/app/api
+
       - name: Build (${{ matrix.os }})
         working-directory: electron
         run: ${{ matrix.build_cmd }}

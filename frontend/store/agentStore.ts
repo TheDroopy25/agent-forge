@@ -130,6 +130,8 @@ export interface AgentState {
   setGuardrails: (data: Partial<AgentState['guardrails']>) => void;
   setObservability: (data: Partial<AgentState['observability']>) => void;
   updateSectionComplete: (section: string, complete: boolean) => void;
+  resetStore: () => void;
+  loadConfig: (data: Partial<AgentState>) => void;
 }
 
 // ─── Section Completion Logic ─────────────────────────────────────────────────
@@ -200,6 +202,8 @@ type ActionKeys = {
   updateSectionComplete: AgentState['updateSectionComplete'];
   markVisited: AgentState['markVisited'];
   setTargetOS: AgentState['setTargetOS'];
+  resetStore: AgentState['resetStore'];
+  loadConfig: AgentState['loadConfig'];
 };
 
 // ─── Default State ────────────────────────────────────────────────────────────
@@ -466,6 +470,36 @@ export const useAgentStore = create<AgentState>()(
           }),
           false,
           'updateSectionComplete'
+        ),
+
+      resetStore: () => {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('agentforge-save');
+        }
+        set(
+          () => {
+            const next = { ...initialStateSlice };
+            return { ...next, ...withDerived(next) };
+          },
+          false,
+          'resetStore'
+        );
+      },
+
+      loadConfig: (data) =>
+        set(
+          (state) => {
+            const sliceKeys = ['identity', 'llm', 'voice', 'memory', 'tools', 'skills', 'channels', 'guardrails', 'observability', 'targetOS'] as const;
+            const merged: Partial<AgentState> = { ...state };
+            for (const key of sliceKeys) {
+              if (key in data && data[key] !== undefined) {
+                (merged as Record<string, unknown>)[key] = data[key];
+              }
+            }
+            return { ...merged, ...withDerived(merged) };
+          },
+          false,
+          'loadConfig'
         ),
     }),
     { name: 'AgentForge' }
