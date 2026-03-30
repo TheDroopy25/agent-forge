@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, Loader } from 'lucide-react';
 import { electronAPI, type AgentDeployConfig, type PrereqResult } from '@/lib/electron';
+import { useAgentStore } from '@/store/agentStore';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,6 +30,18 @@ const PROVIDER_KEY_LABEL: Record<string, string> = {
 
 function apiKeyLabel(provider: string): string {
   return PROVIDER_KEY_LABEL[provider.toLowerCase()] ?? 'LLM API Key';
+}
+
+function nodeInstallUrl(os: string): string {
+  if (os === 'mac') return 'https://nodejs.org/en/download/package-manager#macos';
+  if (os === 'windows') return 'https://nodejs.org/en/download/package-manager#windows';
+  return 'https://nodejs.org/en/download/package-manager#linux';
+}
+
+function nodeInstallLabel(os: string): string {
+  if (os === 'mac') return 'Install Node.js for Mac (pkg installer)';
+  if (os === 'windows') return 'Install Node.js for Windows (.msi installer)';
+  return 'Install Node.js for Linux';
 }
 
 function needsApiKey(provider: string, authType?: string): boolean {
@@ -87,6 +100,7 @@ function ProgressLog({ lines }: { lines: string[] }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function DeployWizard({ config, llmProvider, discordEnabled, onClose }: DeployWizardProps) {
+  const targetOS = useAgentStore((s) => s.targetOS);
   const [step, setStep] = useState<Step>('prereqs');
   const [prereqs, setPrereqs] = useState<PrereqResult | null>(null);
   const [installLog, setInstallLog] = useState<string[]>([]);
@@ -192,6 +206,9 @@ export function DeployWizard({ config, llmProvider, discordEnabled, onClose }: D
               <p style={{ color: '#8b9cb3', fontSize: 13, marginBottom: 12 }}>
                 OpenClaw isn't installed yet. That's okay — we'll install it for you now.
               </p>
+              <p style={{ color: '#4a5568', fontSize: 12, marginBottom: 12 }}>
+                This will run: <code style={{ color: '#76b900' }}>npm install -g openclaw</code> (takes ~30 seconds)
+              </p>
 
               {installLog.length > 0 && (
                 <div style={{ marginBottom: 12 }}>
@@ -223,9 +240,54 @@ export function DeployWizard({ config, llmProvider, discordEnabled, onClose }: D
           )}
 
           {prereqs && !prereqs.node && (
-            <p style={{ color: '#e53e3e', fontSize: 13, marginTop: 16 }}>
-              Node.js 18 or later is required. Please install it from nodejs.org and restart AgentForge.
-            </p>
+            <div style={{
+              marginTop: 12,
+              padding: '12px 16px',
+              background: '#0d1a24',
+              border: '1px solid #1e3a4a',
+              borderRadius: 8,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}>
+              <p style={{ color: '#e2e8f0', fontSize: 13, margin: 0 }}>
+                <strong>Node.js is required</strong> to run your agent. It's a one-time install — takes about 2 minutes.
+              </p>
+              <button
+                onClick={() => electronAPI?.openExternal(nodeInstallUrl(targetOS))}
+                style={{
+                  background: '#76b900',
+                  color: '#000',
+                  fontWeight: 700,
+                  border: 'none',
+                  borderRadius: 6,
+                  padding: '8px 16px',
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  alignSelf: 'flex-start',
+                }}
+              >
+                ↗ {nodeInstallLabel(targetOS)}
+              </button>
+              <p style={{ color: '#4a5568', fontSize: 12, margin: 0 }}>
+                After installing, restart AgentForge and click "Check Again".
+              </p>
+              <button
+                onClick={() => { setPrereqs(null); setStep('prereqs'); }}
+                style={{
+                  background: 'transparent',
+                  color: '#76b900',
+                  border: '1px solid #76b900',
+                  borderRadius: 6,
+                  padding: '6px 14px',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  alignSelf: 'flex-start',
+                }}
+              >
+                Check Again
+              </button>
+            </div>
           )}
         </motion.div>
       )}
